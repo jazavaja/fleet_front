@@ -1,38 +1,35 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRequestProgress } from '../components/RequestProgressContext.tsx';
+import { useAuth } from '../context/AuthContext';
 
 function Login() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
   const { show, hide } = useRequestProgress();
-
+  if (isAuthenticated) {
+    navigate('/dashboard');
+    return null; // یا یک لودر نمایش دهید
+  }
   const handleSubmit = async (e) => {
     e.preventDefault();
     show();
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password }),
-      });
-  
-      const data = await response.json();
-  
-      if (response.ok) {
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
+
+      const success = await login(phone, password);
+
+      if (success) {
         navigate('/dashboard');
       } else {
-        setError(data.detail || 'Login failed');
+        setError('نام کاربری یا رمز عبور اشتباه است.'); 
       }
     } catch (err) {
-      // برای خطاهای شبکه‌ای یا خطاهایی که سرور اصلاً پاسخ نداده
-      setError('Network error. Please try again later.');
-      console.error('Login error:', err);
-    }finally{
+      setError('خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.');
+      console.error('Login submission error:', err);
+    } finally {
       hide();
     }
   };
@@ -51,13 +48,13 @@ function Login() {
         </div>
 
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Admin Panel Fleet Core
+          پنل مدیریت
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="text"
-            placeholder="Phone"
+            placeholder="موبایل"
             value={phone}
             onChange={e => setPhone(e.target.value)}
             required
@@ -65,7 +62,7 @@ function Login() {
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder="کلمه عبور"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
