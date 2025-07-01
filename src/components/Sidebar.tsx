@@ -5,14 +5,15 @@ const Sidebar = () => {
   const activeClass = 'bg-indigo-100 text-indigo-700';
 
   const navItems = [
-    { label: 'Dashboard', path: '/dashboard' },
-    { label: 'Users', path: '/dashboard/users' },
-    { label: 'Settings', path: '/dashboard/settings' },
+    { label: 'داشبورد', path: '/dashboard' }, // مثال: تغییر متن به فارسی
+    { label: 'کاربران', path: '/dashboard/users' },
+    { label: 'تنظیمات', path: '/dashboard/settings' },
+    { label: 'خروج', path: '/dashboard/logout' },
   ];
 
   return (
-    <div className="h-screen w-64 bg-white shadow-md p-4">
-      <h2 className="text-2xl font-bold mb-6">Fleet Core</h2>
+    <div className="h-screen w-64 bg-white shadow-md p-4 text-right">
+      <h2 className="text-2xl font-bold mb-6">پلتفرم ناوگان تجاری</h2> {/* تغییر متن به فارسی */}
       <nav className="flex flex-col space-y-2">
         {navItems.map((item) => (
           <Link

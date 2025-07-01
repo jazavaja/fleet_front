@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from 'react';
 
 const RequestProgressContext = createContext();
 
-export const RequestProgressProvider = ({ children }) => {
+export const RequestProgressProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(false);
 
   const show = () => setLoading(true);
