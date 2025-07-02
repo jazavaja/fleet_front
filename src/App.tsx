@@ -31,6 +31,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout'; // لایه داشبورد شما
 import Dashboard from './pages/Dashboard';
+import Commericial_Fleet from './pages/Commercial_Fleet';
+import ActivityArea from './pages/ActivityArea';
+import UsageTypes from './pages/UsageTypes';
+import ActivityCategories from './pages/ActivityCategories';
+import ServiceProviderRequests from './pages/ServiceProviderRequests';
 // import Users from './pages/Users'; // یک صفحه مثال دیگر
 // import Settings from './pages/Settings'; // یک صفحه مثال دیگر
 import Login from './pages/Login'; // صفحه ورود شما
@@ -53,6 +58,12 @@ function App() {
         {/* گروه مسیرهایی که نیاز به احراز هویت دارند */}
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route path="/dashboard/commercial-fleet" element={<Commericial_Fleet />} />
+          <Route path="/dashboard/activity-area" element={<ActivityArea />} />
+          <Route path="/dashboard/usage-types" element={<UsageTypes />} />
+          <Route path="/dashboard/activity-categories" element={<ActivityCategories />} />
+          <Route path="/dashboard/service-provider-requests" element={<ServiceProviderRequests />} />
         </Route>
 
         {/* مسیر برای خروج (که در سایدبار هم قرار داده بودید) */}
