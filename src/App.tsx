@@ -35,23 +35,24 @@ import Dashboard from './pages/Dashboard';
 // import Settings from './pages/Settings'; // یک صفحه مثال دیگر
 import Login from './pages/Login'; // صفحه ورود شما
 import PrivateRoute from './components/PrivateRoute'; // PrivateRoute را ایمپورت می‌کنیم
+import { useAuth } from './context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import RequestProgressBar from './components/RequestProgressBar';
+
 
 function App() {
   return (
     <Router>
+      {/* نوار پیشرفت همیشه نمایش داده میشه */}
+      <RequestProgressBar />
       <Routes>
         {/* مسیر ورود بدون نیاز به احراز هویت */}
         <Route path="/login" element={<Login />} />
 
         {/* گروه مسیرهایی که نیاز به احراز هویت دارند */}
         <Route element={<PrivateRoute />}>
-          {/* مسیر روت داشبورد */}
           <Route path="/dashboard" element={<Dashboard />} />
-          {/* مسیرهای فرزند داشبورد */}
-          {/* <Route path="/dashboard/users" element={<Users />} /> */}
-          {/* <Route path="/dashboard/settings" element={<Settings />} /> */}
-          {/* می‌توانید یک Redirect برای روت اصلی (/) به /dashboard یا /login اضافه کنید */}
-          
         </Route>
 
         {/* مسیر برای خروج (که در سایدبار هم قرار داده بودید) */}
@@ -76,25 +77,5 @@ const LogoutPage = () => {
 
   return <div>Logging out...</div>;
 };
-
-// // src/pages/Users.tsx
-// const Users = () => {
-//     return (
-//         <DashboardLayout>
-//             <h1 className="text-3xl font-bold text-gray-800 mb-4 text-right">کاربران</h1>
-//             <p className="text-gray-600 text-right">لیست کاربران.</p>
-//         </DashboardLayout>
-//     );
-// };
-
-// // src/pages/Settings.tsx
-// const Settings = () => {
-//     return (
-//         <DashboardLayout>
-//             <h1 className="text-3xl font-bold text-gray-800 mb-4 text-right">تنظیمات</h1>
-//             <p className="text-gray-600 text-right">تنظیمات سیستم.</p>
-//         </DashboardLayout>
-//     );
-// };
 
 export default App;

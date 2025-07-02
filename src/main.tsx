@@ -16,11 +16,14 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css'
 import { AuthProvider } from './context/AuthContext.tsx'; // ایمپورت AuthProvider
+import { RequestProgressProvider } from './components/RequestProgressContext.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <AuthProvider> {/* AuthProvider را اینجا قرار می‌دهیم */}
-      <App />
+    <AuthProvider>
+      <RequestProgressProvider>  {/* اینجا */}
+        <App />
+      </RequestProgressProvider>
     </AuthProvider>
   </React.StrictMode>,
 );

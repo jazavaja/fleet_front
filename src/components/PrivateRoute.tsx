@@ -13,7 +13,7 @@ const PrivateRoute = () => {
 
   // اگر کاربر احراز هویت شده باشد، به مسیر مورد نظر اجازه دسترسی می‌دهد
   // در غیر این صورت، به صفحه ورود (login) هدایت می‌شود
-  return isAuthenticated ? <Outlet /> : <Navigate to="/javad" replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default PrivateRoute;

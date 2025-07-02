@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRequestProgress } from '../components/RequestProgressContext.tsx';
 import { useAuth } from '../context/AuthContext';
@@ -10,22 +10,20 @@ function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
   const { show, hide } = useRequestProgress();
-  if (isAuthenticated) {
-    navigate('/dashboard');
-    return null; // یا یک لودر نمایش دهید
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     show();
     try {
-
       const success = await login(phone, password);
-
-      if (success) {
-        navigate('/dashboard');
-      } else {
-        setError('نام کاربری یا رمز عبور اشتباه است.'); 
+      if (!success) {
+        setError('نام کاربری یا رمز عبور اشتباه است.');
       }
+      // ریدایرکت بعد از login موفق، توسط useEffect انجام میشه
     } catch (err) {
       setError('خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.');
       console.error('Login submission error:', err);
