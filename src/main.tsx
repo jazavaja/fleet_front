@@ -16,7 +16,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css'
 import { AuthProvider } from './context/AuthContext.tsx'; // ایمپورت AuthProvider
-import { RequestProgressProvider } from './components/RequestProgressContext.tsx';
+import { RequestProgressProvider } from './components/progress/RequestProgressContext.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

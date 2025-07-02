@@ -1,4 +1,4 @@
-import Sidebar from '../components/Sidebar.tsx';
+import Sidebar from '../components/dashboard_admin/Sidebar.tsx';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (

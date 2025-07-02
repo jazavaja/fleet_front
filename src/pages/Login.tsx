@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRequestProgress } from '../components/RequestProgressContext.tsx';
+import { useRequestProgress } from '../components/progress/RequestProgressContext.tsx';
 import { useAuth } from '../context/AuthContext';
 
 function Login() {
@@ -70,7 +70,7 @@ function Login() {
             type="submit"
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition"
           >
-            Login
+            ورود
           </button>
         </form>
 

@@ -38,7 +38,7 @@ import PrivateRoute from './components/PrivateRoute'; // PrivateRoute را ای�
 import { useAuth } from './context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import RequestProgressBar from './components/RequestProgressBar';
+import RequestProgressBar from './components/progress/RequestProgressBar';
 
 
 function App() {
