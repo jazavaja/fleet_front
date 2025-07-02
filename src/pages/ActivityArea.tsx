@@ -1,36 +1,90 @@
 import { useState } from "react";
-import DashboardLayout from '../layouts/DashboardLayout';
+import DashboardLayout from "../layouts/DashboardLayout";
+import Select from "react-select";
+
+// فرض می‌کنیم فایل‌ها در src/data/ قرار دارند
+import provincesData from "../data/provinces.json";
+import citiesData from "../data/cities.json";
 
 const Commericial_Fleet = () => {
+  // State ها
   const [regions, setRegions] = useState([
-    { id: 1, province: "تهران", city: "تهران", area: "پاساز خانوم" },
-    { id: 2, province: "اصفهان", city: "اصفهان", area: "چهارباغ" },
-    { id: 3, province: "شیراز", city: "شیراز", area: "خیابان ولیعصر" },
+    { id: 1, province_id: 100, city_id: 1000001002074, area: "پاساز خانوم" },
+    { id: 2, province_id: 101, city_id: 1000004002541, area: "چهارباغ" },
   ]);
 
   const [formData, setFormData] = useState({
     id: null,
-    province: "",
-    city: "",
+    province_id: "",
+    city_id: "",
     area: "",
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedProvinceOption, setSelectedProvinceOption] = useState(null);
+  const [selectedCityOption, setSelectedCityOption] = useState(null);
+  const [filteredCities, setFilteredCities] = useState([]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // تبدیل استان‌ها به فرمت react-select
+  const provinceOptions = provincesData.map(p => ({
+    value: p.id,
+    label: p.name,
+  }));
+
+  // تبدیل شهرهای فیلتر شده به فرمت react-select
+  const cityOptions = filteredCities.map(c => ({
+    value: c.id,
+    label: c.name,
+  }));
+
+  // وقتی استان انتخاب شد
+  const handleProvinceSelect = (selectedOption) => {
+    if (!selectedOption) return;
+
+    const province_id = selectedOption.value;
+    const cities = citiesData.filter(c => c.province_id === province_id);
+
+    setFilteredCities(cities);
+    setSelectedCityOption(null);
+
+    setFormData(prev => ({
+      ...prev,
+      province_id,
+      city_id: "", // reset city
+    }));
+    setSelectedProvinceOption(selectedOption);
+  };
+
+  // وقتی شهر انتخاب شد
+  const handleCitySelect = (selectedOption) => {
+    if (!selectedOption) return;
+
+    const city_id = selectedOption.value;
+    setFormData(prev => ({
+      ...prev,
+      city_id,
+    }));
+    setSelectedCityOption(selectedOption);
+  };
+
+  const handleAreaChange = (e) => {
+    const area = e.target.value;
+    setFormData(prev => ({ ...prev, area }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.province_id || !formData.city_id || !formData.area) {
+      alert("لطفا تمام فیلدها را پر کنید");
+      return;
+    }
+
     if (isEditing) {
-      // Update existing region
       setRegions((prev) =>
         prev.map((r) => (r.id === formData.id ? formData : r))
       );
     } else {
-      // Add new region
       const newRegion = { ...formData, id: Date.now() };
       setRegions((prev) => [...prev, newRegion]);
     }
@@ -38,6 +92,14 @@ const Commericial_Fleet = () => {
   };
 
   const handleEdit = (region) => {
+    const provinceOption = provinceOptions.find(p => p.value === region.province_id);
+    const cities = citiesData.filter(c => c.province_id === region.province_id);
+    const cityOption = cityOptions.find(c => c.value === region.city_id);
+
+    setSelectedProvinceOption(provinceOption);
+    setSelectedCityOption(cityOption);
+    setFilteredCities(cities);
+
     setFormData(region);
     setIsEditing(true);
   };
@@ -47,7 +109,10 @@ const Commericial_Fleet = () => {
   };
 
   const resetForm = () => {
-    setFormData({ id: null, province: "", city: "", area: "" });
+    setFormData({ id: null, province_id: "", city_id: "", area: "" });
+    setSelectedProvinceOption(null);
+    setSelectedCityOption(null);
+    setFilteredCities([]);
     setIsEditing(false);
   };
 
@@ -62,33 +127,44 @@ const Commericial_Fleet = () => {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              name="province"
-              placeholder="استان"
-              value={formData.province}
-              onChange={handleChange}
-              className="border border-gray-300 px-4 py-2 rounded-md"
-              required
-            />
-            <input
-              type="text"
-              name="city"
-              placeholder="شهر"
-              value={formData.city}
-              onChange={handleChange}
-              className="border border-gray-300 px-4 py-2 rounded-md"
-              required
-            />
-            <input
-              type="text"
-              name="area"
-              placeholder="منطقه"
-              value={formData.area}
-              onChange={handleChange}
-              className="border border-gray-300 px-4 py-2 rounded-md"
-              required
-            />
+            {/* استان */}
+            <div>
+              <label className="block text-sm font-medium mb-1">استان</label>
+              <Select
+                options={provinceOptions}
+                value={selectedProvinceOption}
+                onChange={handleProvinceSelect}
+                placeholder="انتخاب استان"
+                isSearchable
+              />
+            </div>
+
+            {/* شهر */}
+            <div>
+              <label className="block text-sm font-medium mb-1">شهر</label>
+              <Select
+                options={cityOptions}
+                value={selectedCityOption}
+                onChange={handleCitySelect}
+                placeholder="ابتدا استان را انتخاب کنید"
+                isSearchable
+                isDisabled={!selectedProvinceOption}
+              />
+            </div>
+
+            {/* منطقه */}
+            <div>
+              <label className="block text-sm font-medium mb-1">منطقه</label>
+              <input
+                type="text"
+                name="area"
+                placeholder="منطقه"
+                value={formData.area}
+                onChange={handleAreaChange}
+                className="w-full border border-gray-300 px-4 py-2 rounded-md"
+                required
+              />
+            </div>
           </div>
           <div className="flex gap-2">
             <button
@@ -127,27 +203,32 @@ const Commericial_Fleet = () => {
             </thead>
             <tbody>
               {regions.length > 0 ? (
-                regions.map((region) => (
-                  <tr key={region.id} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-3">{region.province}</td>
-                    <td className="px-4 py-3">{region.city}</td>
-                    <td className="px-4 py-3">{region.area}</td>
-                    <td className="px-4 py-3 flex justify-center gap-2">
-                      <button
-                        onClick={() => handleEdit(region)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        ویرایش
-                      </button>
-                      <button
-                        onClick={() => handleDelete(region.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        حذف
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                regions.map((region) => {
+                  const provinceName = provincesData.find(p => p.id === region.province_id)?.name || "-";
+                  const cityName = citiesData.find(c => c.id === region.city_id)?.name || "-";
+
+                  return (
+                    <tr key={region.id} className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3">{provinceName}</td>
+                      <td className="px-4 py-3">{cityName}</td>
+                      <td className="px-4 py-3">{region.area}</td>
+                      <td className="px-4 py-3 flex justify-center gap-2">
+                        <button
+                          onClick={() => handleEdit(region)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          ویرایش
+                        </button>
+                        <button
+                          onClick={() => handleDelete(region.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          حذف
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={4} className="text-center py-4 text-gray-500">
