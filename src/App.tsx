@@ -36,7 +36,10 @@ import ActivityArea from './pages/ActivityArea';
 import UsageTypes from './pages/UsageTypes';
 import ActivityCategories from './pages/ActivityCategories';
 import ServiceProviderRequests from './pages/ServiceProviderRequests';
-// import Users from './pages/Users'; // یک صفحه مثال دیگر
+import UsersManagement from './pages/UsersManagement';
+import UsersGroups from './pages/UsersGroups';
+import GroupPermissions from './pages/GroupPermissions';
+
 // import Settings from './pages/Settings'; // یک صفحه مثال دیگر
 import Login from './pages/Login'; // صفحه ورود شما
 import PrivateRoute from './components/PrivateRoute'; // PrivateRoute را ایمپورت می‌کنیم
@@ -64,6 +67,9 @@ function App() {
           <Route path="/dashboard/usage-types" element={<UsageTypes />} />
           <Route path="/dashboard/activity-categories" element={<ActivityCategories />} />
           <Route path="/dashboard/service-provider-requests" element={<ServiceProviderRequests />} />
+          <Route path="/dashboard/user-management" element={<UsersManagement />} />
+          <Route path="/dashboard/user-groups" element={<UsersGroups />} />
+          <Route path="/dashboard/group-permissions" element={<GroupPermissions />} />
         </Route>
 
         {/* مسیر برای خروج (که در سایدبار هم قرار داده بودید) */}

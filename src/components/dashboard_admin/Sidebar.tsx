@@ -5,6 +5,7 @@ const Sidebar = () => {
   const location = useLocation();
   const activeClass = 'bg-indigo-100 text-indigo-700';
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false); // برای باز/بسته بودن زیرمنو
 
   const navItems = [
     { label: 'داشبورد', path: '/dashboard' },
@@ -12,7 +13,14 @@ const Sidebar = () => {
     { label: 'ثبت منطقه فعالیت', path: '/dashboard/activity-area' },
     { label: 'ثبت انواع کاربری', path: '/dashboard/usage-types' },
     { label: 'بخش رسته فعالیت', path: '/dashboard/activity-categories' },
-    { label: 'مدیریت درخواست سرویس دهندگان', path: '/dashboard/service-provider-requests' },
+    { label: 'مدیریت درخواست', path: '/dashboard/service-provider-requests' },
+    // این آیتم والد هست، پس path رو خالی میذاریم
+    { label: 'مدیریت کاربران', path: '', children: [
+      { label: 'کاربران', path: '/dashboard/user-management' },
+      { label: 'گروه‌ها', path: '/dashboard/user-groups' },
+      { label: 'دسترسی‌ها', path: '/dashboard/group-permissions' },
+    ]},
+    { label: 'گزارشات اکسل', path: '/dashboard/report-excel' }
   ];
 
   const logoutPath = '/dashboard/logout';
@@ -22,7 +30,7 @@ const Sidebar = () => {
       {/* دکمه همبرگر موبایل */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-1 right-1 z-50 md:hidden  rounded-md  text-white  shadow-lg btn-hamburger"
+        className="fixed top-1 right-1 z-50 md:hidden rounded-md text-white shadow-lg btn-hamburger"
         aria-label="باز کردن منو"
       >
         &#9776;
@@ -51,11 +59,7 @@ const Sidebar = () => {
       >
         {/* هدر سایدبار: لوگو و دکمه خروج کنار هم */}
         <div className="mb-6 flex items-center justify-between">
-          <img
-            src="/logo.png"
-            alt="Logo"
-            className="h-10 w-auto"
-          />
+          <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
           <Link
             to={logoutPath}
             onClick={() => setMobileOpen(false)}
@@ -75,18 +79,56 @@ const Sidebar = () => {
         </div>
 
         <nav className="flex flex-col space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={`px-4 py-2 rounded-lg hover:bg-indigo-50 ${
-                location.pathname === item.path ? activeClass : 'text-gray-600'
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            // اگر آیتم زیرمجموعه داره (children)
+            if (item.children) {
+              const isAnyChildActive = item.children.some(c => location.pathname === c.path);
+              return (
+                <div key={item.label}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className={`w-full text-right px-4 py-2 rounded-lg font-semibold flex justify-between items-center
+                      ${isAnyChildActive ? activeClass : 'text-gray-600'}
+                    `}
+                  >
+                    {item.label}
+                    <span className={`transition-transform duration-300 ${userMenuOpen ? 'rotate-90' : ''}`}>
+                      ▶
+                    </span>
+                  </button>
+                  {userMenuOpen && (
+                    <div className="flex flex-col mr-4 mt-1 space-y-1">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.path}
+                          to={child.path}
+                          onClick={() => setMobileOpen(false)}
+                          className={`px-4 py-1 rounded-lg text-sm block
+                            ${location.pathname === child.path ? activeClass : 'text-gray-600 hover:bg-indigo-50'}`}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // اگر آیتم ساده هست
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setMobileOpen(false)}
+                className={`px-4 py-2 rounded-lg hover:bg-indigo-50 ${
+                  location.pathname === item.path ? activeClass : 'text-gray-600'
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
     </>
