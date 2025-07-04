@@ -17,11 +17,13 @@ const mockGroups: Group[] = [
 ];
 
 const mockPermissions: Permission[] = [
-  { id: 1, name: 'fleet_add' },
-  { id: 2, name: 'fleet_edit' },
-  { id: 3, name: 'fleet_delete' },
-  { id: 4, name: 'user_manage' },
-  { id: 5, name: 'view_reports' },
+  { id: 1, name: 'مدیریت_ناوگان_تجاری' },
+  { id: 2, name: 'مدیریت_مناطق_فعالیت' },
+  { id: 3, name: 'مدیریت_انواع_کاربری' },
+  { id: 4, name: 'مدیریت_رسته_فعالیت' },
+  { id: 5, name: 'مدیریت_درخواستها' },
+  { id: 5, name: 'مدیریت_کابران' },
+  { id: 5, name: 'مدیریت_گزارشات' },
 ];
 
 const PermissionsManagement = () => {
