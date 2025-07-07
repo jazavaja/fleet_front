@@ -1,5 +1,3 @@
-// pages/PermissionsManagement.tsx
-
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { useGroups } from './hooks/useGroups';
@@ -17,6 +15,7 @@ const PermissionsManagement = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [localPermissions, setLocalPermissions] = useState<number[]>([]);
 
   const {
     permissions: currentPerms,
@@ -25,30 +24,33 @@ const PermissionsManagement = () => {
     refetch: refetchPermissions,
   } = useGroupPermissions(selectedGroupId || 0);
 
+  // Sync local permissions with fetched permissions when they change
+  useEffect(() => {
+    setLocalPermissions(currentPerms);
+  }, [currentPerms]);
+
+  // Set initial group selection
   useEffect(() => {
     if (groups.length > 0) {
       setSelectedGroupId(groups[0].id);
     }
   }, [groups]);
 
+  // Handle checkbox toggle by updating local state
   const handleToggle = (codeName: string) => {
     const id = codeToIdMap[codeName];
-    const updated = currentPerms.includes(id)
-      ? currentPerms.filter((pid) => pid !== id)
-      : [...currentPerms, id];
-
-    savePermissions(updated).then((success) => {
-      if (success) {
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
-      }
-    });
+    setLocalPermissions((prev) =>
+      prev.includes(id)
+        ? prev.filter((pid) => pid !== id)
+        : [...prev, id]
+    );
   };
 
+  // Handle save button click
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const success = await savePermissions(currentPerms);
+      const success = await savePermissions(localPermissions);
       if (success) {
         await refetchPermissions();
         setSaveSuccess(true);
@@ -98,7 +100,7 @@ const PermissionsManagement = () => {
           <label key={perm.code_name} className="flex items-center space-x-2 rtl:space-x-reverse">
             <input
               type="checkbox"
-              checked={currentPerms.includes(perm.id)}
+              checked={localPermissions.includes(perm.id)}
               onChange={() => handleToggle(perm.code_name)}
               disabled={groupPermLoading}
               className="w-4 h-4"
