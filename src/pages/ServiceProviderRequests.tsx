@@ -89,19 +89,19 @@ const ServiceProviderRequests = () => {
     },
   ]);
 
-  const handleApprove = (id) => {
+  const handleApprove = (id: number) => {
     setData((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: 'approved' } : item))
     );
   };
 
-  const handleReject = (id) => {
+  const handleReject = (id: number) => {
     setData((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: 'rejected' } : item))
     );
   };
 
-  const handleImageClick = (imageUrl, altText) => {
+  const handleImageClick = (imageUrl: React.SetStateAction<string>, altText: React.SetStateAction<string>) => {
     setModalImage(imageUrl);
     setModalAlt(altText);
     setModalOpen(true);
@@ -136,11 +136,11 @@ const ServiceProviderRequests = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  const changePage = (pageNumber) => {
+  const changePage = (pageNumber: React.SetStateAction<number>) => {
     setCurrentPage(pageNumber);
   };
 
-  const handleExpand = (id) => {
+  const handleExpand = (id: number | React.SetStateAction<null>) => {
     if (!expandedRow || expandedRow !== id) {
       setLoadedImages((prev) => ({ ...prev, [id]: true }));
     }
@@ -193,7 +193,7 @@ const ServiceProviderRequests = () => {
                 </svg>
               </button>
               <div className="p-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">{modalAlt}</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2 mr-8">{modalAlt}</h3>
                 <img 
                   src={modalImage} 
                   alt={modalAlt}
@@ -264,6 +264,9 @@ const ServiceProviderRequests = () => {
                               <strong>کد ملی:</strong> {item.nationalCode}
                             </div>
                             <div>
+                              <strong>منطقه فعالیت:</strong> {item.activityArea}
+                            </div>
+                            <div>
                               <strong>تصویر مسئول:</strong>{' '}
                               {loadedImages[item.id] ? (
                                 <img
@@ -301,9 +304,7 @@ const ServiceProviderRequests = () => {
                                 <span className="text-gray-400">در حال بارگذاری...</span>
                               )}
                             </div>
-                            <div>
-                              <strong>منطقه فعالیت:</strong> {item.activityArea}
-                            </div>
+                            
 
                             {/* دکمه‌های تایید / رد */}
                             <div className="col-span-full mt-4 flex gap-2">

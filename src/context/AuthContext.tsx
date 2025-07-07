@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const checkAuth = async () => {
     const token = localStorage.getItem('access_token');
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/me`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/user/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // تابعی برای ورود کاربر
   const login = async (phone: string, password: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/login/`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // ارسال درخواست لغو توکن به سرور (اختیاری)
     const token = localStorage.getItem('access_token');
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/logout`, {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/logout`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

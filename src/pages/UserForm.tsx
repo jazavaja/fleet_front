@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useGroups } from './hooks/useGroups';
 
 interface User {
   id: number;
@@ -6,92 +7,193 @@ interface User {
   lastName: string;
   phone: string;
   password: string;
-  group: string; // نام گروه فعلی (مثلاً: مدیران)
+  group: string;
 }
 
-const mockGroups = ['مدیران', 'کارمندان', 'اپراتورها'];
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
 
 const UserManagement = () => {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: 1,
-      firstName: 'علی',
-      lastName: 'رضایی',
-      phone: '09123456789',
-      password: '1234',
-      group: 'مدیران',
-    },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const { groups, loading: groupsLoading } = useGroups();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isSuperUser, setIsSuperUser] = useState(false);
+
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedUserIdForPassword, setSelectedUserIdForPassword] = useState<number | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  
   const [form, setForm] = useState<User>({
     id: 0,
     firstName: '',
     lastName: '',
     phone: '',
     password: '',
-    group: mockGroups[0],
+    group: '',
   });
-  const [isEditing, setIsEditing] = useState(false);
-  const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 5;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.phone.trim() || !form.firstName.trim() || !form.password) return;
+  const token = localStorage.getItem('access_token') || '';
 
-    if (isEditing) {
-      setUsers(users.map(u => (u.id === form.id ? form : u)));
-      setIsEditing(false);
-    } else {
-      const newId = users.length ? Math.max(...users.map(u => u.id)) + 1 : 1;
-      setUsers([...users, { ...form, id: newId }]);
+  useEffect(() => {
+    if (groups.length > 0 && !form.group) {
+      setForm(f => ({ ...f, group: groups[0].id }));
     }
+  }, [groups]);
 
-    setForm({
-      id: 0,
-      firstName: '',
-      lastName: '',
-      phone: '',
-      password: '',
-      group: mockGroups[0],
-    });
+  useEffect(() => {
+    fetchUsers();
+  }, [search]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BASE_URL}/users/?search=${encodeURIComponent(search)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) throw new Error('خطا در واکشی کاربران');
+
+      const data = await res.json();
+
+      const mappedUsers: User[] = data.results.map((u: any) => ({
+        id: u.id,
+        firstName: u.first_name || '',
+        lastName: u.last_name || '',
+        phone: u.phone,
+        password: '',
+      }));
+
+      setUsers(mappedUsers);
+    } catch (error) {
+      console.error('خطا در دریافت کاربران:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // if (!form.phone.trim() || !form.firstName.trim() || !form.password) return;
+
+    try {
+      const url = isEditing
+        ? `${BASE_URL}/users/${form.id}/`
+        : `${BASE_URL}/users/`;
+      const method = isEditing ? 'PATCH' : 'POST';
+
+      const payload = {
+        first_name: form.firstName,
+        last_name: form.lastName,
+        phone: form.phone,
+        is_superuser: isSuperUser,
+        is_staff: !isSuperUser,
+        groups: [form.group]
+      };
+
+      if (!isEditing) {
+        payload.password = form.password; // فقط وقتی ایجاد کاربر است
+      }
+
+      console.log("Result"+JSON.stringify(payload))
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+
+      if (!res.ok) {
+        console.error('خطا در ذخیره کاربر:');
+        return;
+      }
+
+      await fetchUsers();
+      setIsEditing(false);
+      setForm({
+        id: 0,
+        firstName: '',
+        lastName: '',
+        phone: '',
+        password: '',
+        group: groups.length > 0 ? groups[0].id : '',
+      });
+      setIsSuperUser(false);
+    } catch (error) {
+      console.error('خطا در ارسال فرم:', error);
+    }
   };
 
   const handleEdit = (user: User) => {
-    setForm(user);
+    const selectedGroup = groups.find(g => g.name === user.group);
+    setForm({
+      ...user,
+      group: selectedGroup ? selectedGroup.id : '', // ✅ ID بجای name
+    });
     setIsEditing(true);
+    // اگر نیاز بود بعداً isSuperUser رو هم برای ویرایش ست کنیم اینجا اضافه می‌کنیم
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm('آیا از حذف کاربر مطمئن هستید؟')) {
-      setUsers(users.filter((u) => u.id !== id));
+  const handlePasswordChange = async () => {
+    if (!selectedUserIdForPassword || !newPassword.trim()) return;
+
+    try {
+      const res = await fetch(`${BASE_URL}/users/${selectedUserIdForPassword}/change-password/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: newPassword }),
+      });
+
+      if (!res.ok) throw new Error('خطا در تغییر پسورد');
+
+      alert('پسورد با موفقیت تغییر یافت');
+      setShowPasswordModal(false);
+      setNewPassword('');
+    } catch (error) {
+      console.error('خطا در تغییر پسورد:', error);
+      alert('خطا در تغییر پسورد');
     }
   };
 
-  const filtered = users.filter(
-    u =>
-      u.phone.includes(search) ||
-      u.firstName.includes(search) ||
-      u.lastName.includes(search) ||
-      u.group.includes(search)
-  );
+  const handleDelete = async (id: number) => {
+    if (!confirm('آیا از حذف کاربر مطمئن هستید؟')) return;
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginated = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    try {
+      const res = await fetch(`${BASE_URL}/users/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+      if (!res.ok) {
+        console.error('خطا در حذف کاربر');
+        return;
+      }
+
+      await fetchUsers();
+    } catch (error) {
+      console.error('خطا در حذف کاربر:', error);
+    }
   };
 
   return (
-    <>
+    <div className="p-4">
       <h1 className="text-2xl font-bold mb-6 text-gray-700">مدیریت کاربران</h1>
 
-      {/* فرم ثبت / ویرایش */}
+      {/* فرم افزودن / ویرایش */}
       <form onSubmit={handleSubmit} className="flex flex-wrap gap-4 mb-6">
         <input
           type="text"
@@ -119,21 +221,45 @@ const UserManagement = () => {
           placeholder="رمز عبور"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
+          disabled={isEditing} // فقط در حالت ویرایش غیرفعال است
           className="border px-3 py-2 rounded w-[180px]"
         />
+
         <select
           value={form.group}
           onChange={(e) => setForm({ ...form, group: e.target.value })}
           className="border px-3 py-2 rounded w-[180px]"
+          disabled={groupsLoading || groups.length === 0 || isSuperUser}
         >
-          {mockGroups.map((g) => (
-            <option key={g} value={g}>{g}</option>
-          ))}
+          {groupsLoading && <option>در حال بارگذاری گروه‌ها...</option>}
+          {!groupsLoading && groups.length === 0 && <option>گروهی موجود نیست</option>}
+          {!groupsLoading &&
+            groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
         </select>
+
+        <label className="flex items-center space-x-2 rtl:space-x-reverse">
+          <input
+            type="checkbox"
+            checked={isSuperUser}
+            onChange={(e) => setIsSuperUser(e.target.checked)}
+          />
+          <span>کاربر مدیریت اصلی (سوپریوزر)</span>
+        </label>
+
+        {groups.length === 0 && !isSuperUser && (
+          <p className="text-red-500 w-full">
+            تا زمانی که گروهی تعریف نشده، فقط می‌توان کاربر مدیریت اصلی (سوپریوزر) افزود.
+          </p>
+        )}
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          disabled={groups.length === 0 && !isSuperUser}
+          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
         >
           {isEditing ? 'ویرایش' : 'افزودن'}
         </button>
@@ -149,8 +275,9 @@ const UserManagement = () => {
                 lastName: '',
                 phone: '',
                 password: '',
-                group: mockGroups[0],
+                group: groups.length > 0 ? groups[0].name : '',
               });
+              setIsSuperUser(false);
             }}
             className="text-red-500 mt-2"
           >
@@ -159,97 +286,108 @@ const UserManagement = () => {
         )}
       </form>
 
-      {/* فیلتر جستجو */}
+      {/* جستجو */}
       <input
         type="text"
         placeholder="جستجو..."
         className="border px-3 py-2 mb-4 rounded w-1/3"
         value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setCurrentPage(1);
-        }}
+        onChange={(e) => setSearch(e.target.value)}
       />
 
       {/* جدول کاربران */}
-      <table className="w-full table-auto border text-right">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="border px-2 py-1">شناسه</th>
-            <th className="border px-2 py-1">نام</th>
-            <th className="border px-2 py-1">نام خانوادگی</th>
-            <th className="border px-2 py-1">موبایل</th>
-            <th className="border px-2 py-1">گروه</th>
-            <th className="border px-2 py-1">عملیات</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginated.map((user) => (
-            <tr key={user.id}>
-              <td className="border px-2 py-1">{user.id}</td>
-              <td className="border px-2 py-1">{user.firstName}</td>
-              <td className="border px-2 py-1">{user.lastName}</td>
-              <td className="border px-2 py-1">{user.phone}</td>
-              <td className="border px-2 py-1">{user.group}</td>
-              <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
-                <button
-                  onClick={() => handleEdit(user)}
-                  className="text-blue-600 hover:underline"
-                >
-                  ویرایش
-                </button>
-                <button
-                  onClick={() => handleDelete(user.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  حذف
-                </button>
-              </td>
-            </tr>
-          ))}
-          {paginated.length === 0 && (
+      {loading ? (
+        <p className="text-center text-gray-500">در حال بارگذاری...</p>
+      ) : (
+        <table className="w-full table-auto border text-right">
+          <thead className="bg-gray-100">
             <tr>
-              <td colSpan={6} className="text-center py-4 text-gray-500">
-                هیچ کاربری یافت نشد.
-              </td>
+              <th className="border px-2 py-1">شناسه</th>
+              <th className="border px-2 py-1">نام</th>
+              <th className="border px-2 py-1">نام خانوادگی</th>
+              <th className="border px-2 py-1">موبایل</th>
+              <th className="border px-2 py-1">گروه</th>
+              <th className="border px-2 py-1">عملیات</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.length > 0 ? (
+              users.map((user) => (
+                <tr key={user.id}>
+                  <td className="border px-2 py-1">{user.id}</td>
+                  <td className="border px-2 py-1">{user.firstName}</td>
+                  <td className="border px-2 py-1">{user.lastName}</td>
+                  <td className="border px-2 py-1">{user.phone}</td>
+                  <td className="border px-2 py-1">{user.group}</td>
+                  <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
+                    <button
+                      onClick={()=> handleEdit(user)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition disabled:opacity-50 focus:outline-none"
+                  
+                    >
+                      ویرایش
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedUserIdForPassword(user.id);
+                        setShowPasswordModal(true);
+                      }}
+                      className="bg-cyan-500 hover:bg-cyan-900 text-white px-4 py-2 rounded shadow transition disabled:opacity-50 focus:outline-none"
+                    >
+                      ویرایش پسورد
+                    </button>
+                    
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="bg-red-700 hover:bg-red-400 text-white px-4 py-2 m-2 rounded shadow transition disabled:opacity-50 focus:outline-none"
+                    >
+                      حذف
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="text-center py-4 text-gray-500">
+                  هیچ کاربری یافت نشد.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
+      
 
-      {/* صفحه‌بندی */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-4 gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="border px-3 py-1 rounded hover:bg-gray-100"
-          >
-            قبلی
-          </button>
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`border px-3 py-1 rounded ${
-                currentPage === i + 1
-                  ? 'bg-blue-500 text-white'
-                  : 'hover:bg-gray-100'
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="border px-3 py-1 rounded hover:bg-gray-100"
-          >
-            بعدی
-          </button>
+      {/* Modal ویرایش پسورد */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow w-96">
+            <h3 className="text-lg font-bold mb-4">ویرایش پسورد</h3>
+            <input
+              type="password"
+              placeholder="پسورد جدید"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="border px-3 py-2 rounded w-full mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded"
+              >
+                انصراف
+              </button>
+              <button
+                onClick={handlePasswordChange}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                ذخیره
+              </button>
+            </div>
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
