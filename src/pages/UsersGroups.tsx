@@ -1,36 +1,78 @@
 import { useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
+import { useGroups } from './hooks/useGroups';
 
 interface Group {
     id: number;
     name: string;
 }
-
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
 const GroupManagement = () => {
-    const [groups, setGroups] = useState<Group[]>([
-        { id: 1, name: 'مدیران' },
-        { id: 2, name: 'کارمندان' },
-    ]);
+
+    const { groups, loading, removeCacheGroups, refetch } = useGroups();
+
     const [form, setForm] = useState<Group>({ id: 0, name: '' });
     const [isEditing, setIsEditing] = useState(false);
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
     const itemsPerPage = 5;
+    const token = localStorage.getItem('access_token') || '';
 
-    const handleSubmit = (e: React.FormEvent) => {
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.name.trim()) return;
+        try {
+            const url = isEditing ? `${BASE_URL}/groups/${form.id}/` : `${BASE_URL}/groups/`;
+            const method = isEditing ? 'PATCH' : 'POST';
 
-        if (isEditing) {
-            setGroups(groups.map(g => (g.id === form.id ? form : g)));
+            const payload = {
+                name: form.name
+            };
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) throw new Error('خطا در ذخیره گروه');
+
+            // ✅ دوباره دیتا رو فچ کن
+            removeCacheGroups(); // کش رو پاک کن
+            await refetch();     // دوباره دیتا رو از سرور بخون
+
             setIsEditing(false);
-        } else {
-            const newId = groups.length ? Math.max(...groups.map(g => g.id)) + 1 : 1;
-            setGroups([...groups, { ...form, id: newId }]);
+            setForm({ id: 0, name: '' });
+        } catch (error) {
+            console.error('خطا:', error);
         }
+    };
 
-        setForm({ id: 0, name: '' });
+    const handleDelete = async (id: number) => {
+        if (!confirm('آیا از حذف گروه مطمئن هستید؟')) return;
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const res = await fetch(`${BASE_URL}/groups/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!res.ok) throw new Error('خطا در حذف گروه');
+
+            // ✅ دوباره دیتا رو فچ کن
+            removeCacheGroups();
+            await refetch();
+        } catch (error) {
+            console.error('خطا:', error);
+        }
     };
 
     const handleEdit = (group: Group) => {
@@ -38,11 +80,6 @@ const GroupManagement = () => {
         setIsEditing(true);
     };
 
-    const handleDelete = (id: number) => {
-        if (confirm('آیا از حذف گروه مطمئن هستید؟')) {
-            setGroups(groups.filter((g) => g.id !== id));
-        }
-    };
 
     const filtered = groups.filter((g) => g.name.includes(search));
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
