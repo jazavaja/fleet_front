@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 
 interface UsageType {
@@ -7,64 +7,91 @@ interface UsageType {
 }
 
 const UseageType = () => {
-  const [usageTypes, setUsageTypes] = useState<UsageType[]>([
-    { id: 1, name: 'یخچالی' },
-    { id: 2, name: 'وانتی' },
-    { id: 3, name: 'سواری' },
-    { id: 4, name: 'کامیون' },
-    { id: 5, name: 'تریلی' },
-    { id: 6, name: 'موتوری' },
-    { id: 7, name: 'اتوبوس' },
-    { id: 8, name: 'لندرور' },
-    { id: 9, name: 'مزدا یخچال' },
-  ]);
-
-  const [form, setForm] = useState<UsageType>({ id: 0, name: '' });
-  const [isEditing, setIsEditing] = useState(false);
+  const [usageTypes, setUsageTypes] = useState<UsageType[]>([]);
+  const [form, setForm] = useState<Omit<UsageType, 'id'>>({ name: '' });
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [prevUrl, setPrevUrl] = useState<string | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
 
-  const itemsPerPage = 5;
+  const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
+  const BASE_LIST_URL = `${API_BASE_URL}/usage-type/`;
 
-  // -----------------------------
-  const handleSubmit = (e: React.FormEvent) => {
+  // فراخوانی داده‌ها از URL مشخص
+  const fetchUsageTypes = async (url: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('خطا در دریافت داده‌ها');
+
+      const data = await res.json();
+      setUsageTypes(data.results);
+      setNextUrl(data.next);
+      setPrevUrl(data.previous);
+    } catch (error) {
+      console.error('Error fetching usage types:', error);
+    }
+  };
+
+  // بارگذاری اولیه و زمان تغییر سرچ
+  useEffect(() => {
+    // ساخت URL پایه همراه با جستجو (بدون page_size)
+    const query = new URLSearchParams();
+    if (searchTerm.trim()) query.append('search', searchTerm.trim());
+
+    const url = `${BASE_LIST_URL}?${query.toString()}`;
+    setCurrentUrl(url);
+  }, [searchTerm]);
+
+  // واکشی داده هر بار که currentUrl تغییر کنه
+  useEffect(() => {
+    if (currentUrl) fetchUsageTypes(currentUrl);
+  }, [currentUrl]);
+
+  // ثبت فرم (افزودن/ویرایش)
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
 
-    if (isEditing) {
-      setUsageTypes(usageTypes.map((item) => (item.id === form.id ? form : item)));
-      setIsEditing(false);
-    } else {
-      const newId = usageTypes.length > 0 ? Math.max(...usageTypes.map((u) => u.id)) + 1 : 1;
-      setUsageTypes([...usageTypes, { id: newId, name: form.name }]);
+    const url = editingId !== null
+      ? `${API_BASE_URL}/usage-type/${editingId}/`
+      : `${API_BASE_URL}/usage-type/`;
+    const method = editingId !== null ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) throw new Error(editingId ? 'خطا در ویرایش' : 'خطا در افزودن');
+
+      setForm({ name: '' });
+      setEditingId(null);
+
+      // دوباره بارگذاری صفحه فعلی
+      if (currentUrl) fetchUsageTypes(currentUrl);
+    } catch (error) {
+      console.error('Error submitting usage type:', error);
     }
-    setForm({ id: 0, name: '' });
   };
 
-  const handleEdit = (item: UsageType) => {
-    setForm(item);
-    setIsEditing(true);
-  };
+  // حذف
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('آیا از حذف مطمئن هستید؟')) return;
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('آیا از حذف مطمئن هستید؟')) {
-      setUsageTypes(usageTypes.filter((item) => item.id !== id));
-    }
-  };
+    try {
+      const res = await fetch(`${API_BASE_URL}/usage-type/${id}/`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-  const filteredData = usageTypes.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      if (!res.ok) throw new Error('خطا در حذف');
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+      if (currentUrl) fetchUsageTypes(currentUrl);
+    } catch (error) {
+      console.error('Error deleting usage type:', error);
     }
   };
 
@@ -78,21 +105,21 @@ const UseageType = () => {
           type="text"
           placeholder="نام نوع کاربری"
           value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          onChange={(e) => setForm({ name: e.target.value })}
           className="border rounded px-3 py-1 w-1/3"
         />
         <button
           type="submit"
           className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
         >
-          {isEditing ? 'ویرایش' : 'افزودن'}
+          {editingId !== null ? 'ویرایش' : 'افزودن'}
         </button>
-        {isEditing && (
+        {editingId !== null && (
           <button
             type="button"
             onClick={() => {
-              setIsEditing(false);
-              setForm({ id: 0, name: '' });
+              setEditingId(null);
+              setForm({ name: '' });
             }}
             className="text-red-500"
           >
@@ -101,17 +128,14 @@ const UseageType = () => {
         )}
       </form>
 
-      {/* سرچ */}
+      {/* جستجو */}
       <div className="mb-4">
         <input
           type="text"
           placeholder="جستجو..."
           className="border px-3 py-1 rounded w-1/3"
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1); // ریست صفحه به ۱ بعد سرچ
-          }}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
@@ -125,27 +149,31 @@ const UseageType = () => {
           </tr>
         </thead>
         <tbody>
-          {paginatedData.map((item) => (
-            <tr key={item.id}>
-              <td className="border px-2 py-1">{item.id}</td>
-              <td className="border px-2 py-1">{item.name}</td>
-              <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="text-blue-600 hover:underline"
-                >
-                  ویرایش
-                </button>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  حذف
-                </button>
-              </td>
-            </tr>
-          ))}
-          {paginatedData.length === 0 && (
+          {usageTypes.length > 0 ? (
+            usageTypes.map((item) => (
+              <tr key={item.id}>
+                <td className="border px-2 py-1">{item.id}</td>
+                <td className="border px-2 py-1">{item.name}</td>
+                <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
+                  <button
+                    onClick={() => {
+                      setForm({ name: item.name });
+                      setEditingId(item.id);
+                    }}
+                    className="text-blue-600 hover:underline"
+                  >
+                    ویرایش
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    حذف
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
             <tr>
               <td colSpan={3} className="text-center text-gray-500 py-4">
                 نتیجه‌ای یافت نشد.
@@ -155,36 +183,24 @@ const UseageType = () => {
         </tbody>
       </table>
 
-      {/* صفحه‌بندی */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-4 gap-2">
-          <button
-            className="px-3 py-1 border rounded hover:bg-gray-100"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            قبلی
-          </button>
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 border rounded ${
-                currentPage === i + 1 ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            className="px-3 py-1 border rounded hover:bg-gray-100"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            بعدی
-          </button>
-        </div>
-      )}
+      {/* دکمه‌های صفحه‌بندی */}
+      <div className="flex justify-center mt-4 gap-2">
+        <button
+          className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+          onClick={() => prevUrl && setCurrentUrl(prevUrl)}
+          disabled={!prevUrl}
+        >
+          قبلی
+        </button>
+
+        <button
+          className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+          onClick={() => nextUrl && setCurrentUrl(nextUrl)}
+          disabled={!nextUrl}
+        >
+          بعدی
+        </button>
+      </div>
     </DashboardLayout>
   );
 };

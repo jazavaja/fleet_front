@@ -13,13 +13,14 @@ const Sidebar = () => {
     { label: 'ثبت منطقه فعالیت', path: '/dashboard/activity-area' },
     { label: 'ثبت انواع کاربری', path: '/dashboard/usage-types' },
     { label: 'بخش رسته فعالیت', path: '/dashboard/activity-categories' },
-    { label: 'مدیریت درخواست', path: '/dashboard/service-provider-requests' },
+    
     // این آیتم والد هست، پس path رو خالی میذاریم
     { label: 'مدیریت کاربران', path: '', children: [
       { label: 'کاربران', path: '/dashboard/user-management' },
       { label: 'گروه‌ها', path: '/dashboard/user-groups' },
       { label: 'دسترسی‌ها', path: '/dashboard/group-permissions' },
     ]},
+    { label: 'مدیریت درخواست', path: '/dashboard/service-provider-requests' },
     { label: 'گزارشات اکسل', path: '/dashboard/report-excel' }
   ];
 
