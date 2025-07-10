@@ -66,8 +66,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // تابعی برای خروج کاربر
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
 
     // ارسال درخواست لغو توکن به سرور (اختیاری)
     const token = localStorage.getItem('access_token');
@@ -78,6 +76,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         'Content-Type': 'application/json'
       }
     }).catch(err => console.error("Logout request failed", err));
+
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
   };
 
   // هر بار که کامپوننت AuthProvider رندر شود (یا هنگام بارگذاری اولیه) وضعیت احراز هویت را بررسی می‌کنیم

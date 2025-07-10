@@ -1,113 +1,210 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Select from "react-select";
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
 
-// فرض می‌کنیم فایل‌ها در src/data/ قرار دارند
-import provincesData from "../data/provinces.json";
-import citiesData from "../data/cities.json";
+const Commercial_Fleet = () => {
 
-const Commericial_Fleet = () => {
-  // State ها
-  const [regions, setRegions] = useState([
-    { id: 1, province_id: 100, city_id: 1000001002074, area: "پاساز خانوم" },
-    { id: 2, province_id: 101, city_id: 1000004002541, area: "چهارباغ" },
-  ]);
-
+  // States
+  const [regions, setRegions] = useState([]);
   const [formData, setFormData] = useState({
     id: null,
     province_id: "",
     city_id: "",
     area: "",
   });
-
   const [isEditing, setIsEditing] = useState(false);
   const [selectedProvinceOption, setSelectedProvinceOption] = useState(null);
   const [selectedCityOption, setSelectedCityOption] = useState(null);
   const [filteredCities, setFilteredCities] = useState([]);
+  const [provinces, setProvinces] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ۱. دریافت لیست استان‌ها
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/regions/provinces/`);
+        const data = await res.json();
+        setProvinces(data);
+      } catch (err) {
+        console.error("Error fetching provinces:", err);
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  // ۲. دریافت شهرها بر اساس استان انتخاب شده
+  useEffect(() => {
+    if (!selectedProvinceOption) return;
+
+    const fetchCities = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/regions/cities/?province_id=${selectedProvinceOption.value}`
+        );
+        const data = await res.json();
+        setFilteredCities(data);
+        setSelectedCityOption(null);
+      } catch (err) {
+        console.error("Error fetching cities:", err);
+      }
+    };
+
+    fetchCities();
+  }, [selectedProvinceOption]);
+
+  // ۳. دریافت مناطق فعالیت اولیه
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/regions/areas/`);
+        const data = await res.json();
+        console.log(data)
+        setRegions(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching activity areas:", err);
+        setLoading(false);
+      }
+    };
+    fetchAreas();
+  }, []);
 
   // تبدیل استان‌ها به فرمت react-select
-  const provinceOptions = provincesData.map(p => ({
+  const provinceOptions = provinces.map((p) => ({
     value: p.id,
     label: p.name,
   }));
 
-  // تبدیل شهرهای فیلتر شده به فرمت react-select
-  const cityOptions = filteredCities.map(c => ({
+  const cityOptions = filteredCities.map((c) => ({
     value: c.id,
     label: c.name,
   }));
 
-  // وقتی استان انتخاب شد
+  // انتخاب استان
   const handleProvinceSelect = (selectedOption) => {
-    if (!selectedOption) return;
-
-    const province_id = selectedOption.value;
-    const cities = citiesData.filter(c => c.province_id === province_id);
-
-    setFilteredCities(cities);
-    setSelectedCityOption(null);
-
-    setFormData(prev => ({
-      ...prev,
-      province_id,
-      city_id: "", // reset city
-    }));
     setSelectedProvinceOption(selectedOption);
-  };
-
-  // وقتی شهر انتخاب شد
-  const handleCitySelect = (selectedOption) => {
-    if (!selectedOption) return;
-
-    const city_id = selectedOption.value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      city_id,
+      province_id: selectedOption?.value || "",
+      city_id: "",
     }));
+    setSelectedCityOption(null);
+  };
+
+  // انتخاب شهر
+  const handleCitySelect = (selectedOption) => {
     setSelectedCityOption(selectedOption);
+    setFormData((prev) => ({
+      ...prev,
+      city_id: selectedOption?.value || "",
+    }));
   };
 
+  // تغییر منطقه
   const handleAreaChange = (e) => {
-    const area = e.target.value;
-    setFormData(prev => ({ ...prev, area }));
+    setFormData((prev) => ({
+      ...prev,
+      area: e.target.value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  // ثبت منطقه
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.province_id || !formData.city_id || !formData.area) {
       alert("لطفا تمام فیلدها را پر کنید");
       return;
     }
+    const payload = {
+      city_id: formData.city_id,
+      area: formData.area,
+    };
 
-    if (isEditing) {
-      setRegions((prev) =>
-        prev.map((r) => (r.id === formData.id ? formData : r))
-      );
-    } else {
-      const newRegion = { ...formData, id: Date.now() };
-      setRegions((prev) => [...prev, newRegion]);
+    try {
+      if (isEditing) {
+        // ویرایش
+        const res = await fetch(`${API_BASE_URL}/regions/areas/${formData.id}/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error("Failed to update");
+
+        const updatedData = await res.json();
+        setRegions((prev) =>
+          prev.map((r) => (r.id === formData.id ? updatedData : r))
+        );
+      } else {
+        // ثبت جدید
+
+        console.log(JSON.stringify(payload))
+        const res = await fetch(`${API_BASE_URL}/regions/areas/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error("Failed to create");
+
+        const newData = await res.json();
+        setRegions((prev) => [...prev, newData]);
+      }
+
+      resetForm();
+    } catch (err) {
+      console.error(err);
+      alert("خطا در ذخیره اطلاعات");
     }
-    resetForm();
   };
 
+  // ویرایش منطقه
   const handleEdit = (region) => {
-    const provinceOption = provinceOptions.find(p => p.value === region.province_id);
-    const cities = citiesData.filter(c => c.province_id === region.province_id);
-    const cityOption = cityOptions.find(c => c.value === region.city_id);
+    console.log(region)
+    const provinceOption = provinceOptions.find(
+      (p) => p.value === region.city.province.id
+    );
+    const cityOption = cityOptions.find((c) => c.value === region.city.id);
 
     setSelectedProvinceOption(provinceOption);
     setSelectedCityOption(cityOption);
-    setFilteredCities(cities);
+    setFilteredCities([region.city]);
 
-    setFormData(region);
+    setFormData({
+      id: region.id,
+      province_id: region.city.province.id,
+      city_id: region.city.id,
+      area: region.area,
+    });
     setIsEditing(true);
   };
 
-  const handleDelete = (id) => {
-    setRegions((prev) => prev.filter((r) => r.id !== id));
+  // حذف منطقه
+  const handleDelete = async (id) => {
+    if (!window.confirm("آیا مطمئن هستید؟")) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/regions/areas/${id}/`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete");
+
+      setRegions((prev) => prev.filter((r) => r.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("خطا در حذف منطقه");
+    }
   };
 
+  // ریست فرم
   const resetForm = () => {
     setFormData({ id: null, province_id: "", city_id: "", area: "" });
     setSelectedProvinceOption(null);
@@ -118,9 +215,7 @@ const Commericial_Fleet = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-3xl font-bold text-gray-500 mb-4">ثبت منطقه فعالیت</h1>
-
-      {/* Form */}
+      {/* فرم */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <h2 className="text-xl font-semibold mb-4">
           {isEditing ? "ویرایش منطقه" : "افزودن منطقه جدید"}
@@ -186,62 +281,54 @@ const Commericial_Fleet = () => {
         </form>
       </div>
 
-      {/* List */}
+      {/* لیست مناطق */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-4 bg-gray-100 border-b">
           <h2 className="text-lg font-semibold">لیست مناطق فعالیت</h2>
         </div>
         <div className="max-h-96 overflow-y-auto">
-          <table className="w-full table-auto">
-            <thead className="bg-gray-50 sticky top-0">
-              <tr>
-                <th className="px-4 py-2 text-right">استان</th>
-                <th className="px-4 py-2 text-right">شهر</th>
-                <th className="px-4 py-2 text-right">منطقه</th>
-                <th className="px-4 py-2 text-center">عملیات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {regions.length > 0 ? (
-                regions.map((region) => {
-                  const provinceName = provincesData.find(p => p.id === region.province_id)?.name || "-";
-                  const cityName = citiesData.find(c => c.id === region.city_id)?.name || "-";
-
-                  return (
-                    <tr key={region.id} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-3">{provinceName}</td>
-                      <td className="px-4 py-3">{cityName}</td>
-                      <td className="px-4 py-3">{region.area}</td>
-                      <td className="px-4 py-3 flex justify-center gap-2">
-                        <button
-                          onClick={() => handleEdit(region)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          ویرایش
-                        </button>
-                        <button
-                          onClick={() => handleDelete(region.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          حذف
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
+          {loading ? (
+            <div className="text-center py-4 text-gray-500">در حال بارگزاری...</div>
+          ) : regions.length > 0 ? (
+            <table className="w-full table-auto">
+              <thead className="bg-gray-50 sticky top-0">
                 <tr>
-                  <td colSpan={4} className="text-center py-4 text-gray-500">
-                    هیچ منطقه‌ای ثبت نشده است.
-                  </td>
+                  
+                  <th className="px-4 py-2 text-right">شهر</th>
+                  <th className="px-4 py-2 text-right">منطقه</th>
+                  <th className="px-4 py-2 text-center">عملیات</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {regions.map((region) => (
+                  <tr key={region.id} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-3">{region.city.name}</td>
+                    <td className="px-4 py-3">{region.area}</td>
+                    <td className="px-4 py-3 flex justify-center gap-2">
+                      <button
+                        onClick={() => handleEdit(region)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        ویرایش
+                      </button>
+                      <button
+                        onClick={() => handleDelete(region.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        حذف
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-4 text-gray-500">هیچ منطقه‌ای ثبت نشده است.</div>
+          )}
         </div>
       </div>
     </DashboardLayout>
   );
 };
 
-export default Commericial_Fleet;
+export default Commercial_Fleet;
