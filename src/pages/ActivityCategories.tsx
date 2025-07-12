@@ -1,71 +1,147 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 
 interface ActivityCategory {
   id: number;
   name: string;
-  type: 'خدمت' | 'کالا';
+  type: 'خدمت' | 'کالا' | 'کالا و خدمت';
 }
 
 const ActivityCategory = () => {
-  const [categories, setCategories] = useState<ActivityCategory[]>([
-    { id: 1, name: 'حمل بار سنگین', type: 'خدمت' },
-    { id: 2, name: 'مواد غذایی یخچالی', type: 'کالا' },
-    { id: 3, name: 'تجهیزات صنعتی', type: 'کالا' },
-  ]);
-
-  const [form, setForm] = useState<ActivityCategory>({
-    id: 0,
+  const [categories, setCategories] = useState<ActivityCategory[]>([]);
+  const [form, setForm] = useState<Omit<ActivityCategory, 'id'>>({
     name: '',
     type: 'خدمت',
   });
-  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [prevUrl, setPrevUrl] = useState<string | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
 
-  const itemsPerPage = 5;
+  const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
+  const BASE_LIST_URL = `${API_BASE_URL}/activity-category/`;
+  const AUTH_TOKEN = localStorage.getItem('access_token') || '';
 
-  // -------------------------------
-  const handleSubmit = (e: React.FormEvent) => {
+  // فراخوانی داده‌ها از URL مشخص
+  const fetchCategories = async (url: string) => {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`خطا در دریافت داده‌ها - status: ${res.status}`);
+
+      const data = await res.json();
+
+      // فقط اگر data.results وجود داشته باشد
+      if (Array.isArray(data.results)) {
+        setCategories(
+          data.results.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            type: item.category_type === 'SERVICE'
+              ? 'خدمت'
+              : item.category_type === 'PRODUCT'
+                ? 'کالا'
+                : 'کالا و خدمت',
+          }))
+        );
+        setNextUrl(data.next);
+        setPrevUrl(data.previous);
+      } else {
+        console.error('فرمت داده نادرست است:', data);
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  // بارگذاری اولیه و زمان تغییر سرچ
+  useEffect(() => {
+    const query = new URLSearchParams();
+    if (searchTerm.trim()) query.append('search', searchTerm.trim());
+
+    const url = `${BASE_LIST_URL}?${query.toString()}`;
+    setCurrentUrl(url);
+  }, [searchTerm]);
+
+  // واکشی داده هر بار که currentUrl تغییر کنه
+  useEffect(() => {
+    if (currentUrl) fetchCategories(currentUrl);
+  }, [currentUrl]);
+
+  // ثبت فرم (افزودن/ویرایش)
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
 
-    if (isEditing) {
-      setCategories(categories.map((c) => (c.id === form.id ? form : c)));
-      setIsEditing(false);
-    } else {
-      const newId = categories.length ? Math.max(...categories.map(c => c.id)) + 1 : 1;
-      setCategories([...categories, { ...form, id: newId }]);
+    const typeMap: Record<string, 'SERVICE' | 'PRODUCT' | 'BOTH'> = {
+      'SERVICE': 'SERVICE',
+      'PRODUCT': 'PRODUCT',
+      'BOTH': 'BOTH',
+    };
+    const payload = {
+      name: form.name,
+      category_type: typeMap[form.type] || 'SERVICE',
+    };
+
+    console.log(form.type)
+
+
+    console.log('sending PATCH payload:', payload);
+
+    const url = editingId !== null
+      ? `${API_BASE_URL}/activity-category/${editingId}/`
+      : `${API_BASE_URL}/activity-category/`;
+
+    const method = editingId !== null ? 'PATCH' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error(editingId ? 'خطا در ویرایش' : 'خطا در افزودن');
+
+      setForm({ name: '', type: 'خدمت' });
+      setEditingId(null);
+
+      // دوباره بارگذاری لیست
+      if (currentUrl) fetchCategories(currentUrl);
+    } catch (error) {
+      console.error('Error submitting category:', error);
     }
-
-    setForm({ id: 0, name: '', type: 'خدمت' });
   };
 
-  const handleEdit = (item: ActivityCategory) => {
-    setForm(item);
-    setIsEditing(true);
-  };
+  // حذف
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('آیا از حذف مطمئن هستید؟')) return;
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('آیا مطمئنید؟')) {
-      setCategories(categories.filter((c) => c.id !== id));
+    try {
+      const res = await fetch(`${API_BASE_URL}/activity-category/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+      });
+
+      if (!res.ok) throw new Error('خطا در حذف');
+
+      // دوباره بارگذاری لیست
+      if (currentUrl) fetchCategories(currentUrl);
+    } catch (error) {
+      console.error('Error deleting category:', error);
     }
-  };
-
-  const filteredData = categories.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.type.includes(searchTerm)
-  );
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
   return (
@@ -85,27 +161,28 @@ const ActivityCategory = () => {
         <select
           value={form.type}
           onChange={(e) =>
-            setForm({ ...form, type: e.target.value as 'خدمت' | 'کالا' })
+            setForm({ ...form, type: e.target.value as 'خدمت' | 'کالا' | 'کالا و خدمت' })
           }
           className="border rounded px-3 py-1"
         >
-          <option value="خدمت">خدمت</option>
-          <option value="کالا">کالا</option>
+          <option value="SERVICE">خدمت</option>
+          <option value="PRODUCT">کالا</option>
+          <option value="BOTH">کالا و خدمت</option>
         </select>
 
         <button
           type="submit"
           className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
         >
-          {isEditing ? 'ویرایش' : 'افزودن'}
+          {editingId !== null ? 'ویرایش' : 'افزودن'}
         </button>
 
-        {isEditing && (
+        {editingId !== null && (
           <button
             type="button"
             onClick={() => {
-              setIsEditing(false);
-              setForm({ id: 0, name: '', type: 'خدمت' });
+              setEditingId(null);
+              setForm({ name: '', type: 'خدمت' });
             }}
             className="text-red-500"
           >
@@ -114,17 +191,14 @@ const ActivityCategory = () => {
         )}
       </form>
 
-      {/* سرچ */}
+      {/* جستجو */}
       <div className="mb-4">
         <input
           type="text"
-          placeholder="جستجو بر اساس نام یا نوع..."
+          placeholder="جستجو..."
           className="border px-3 py-1 rounded w-1/3"
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
@@ -133,34 +207,46 @@ const ActivityCategory = () => {
         <thead>
           <tr className="bg-gray-100">
             <th className="border px-2 py-1">شناسه</th>
-            <th className="border px-2 py-1">نام رسته</th>
+            <th className="border px-2 py-1">نام</th>
             <th className="border px-2 py-1">نوع</th>
             <th className="border px-2 py-1">عملیات</th>
           </tr>
         </thead>
         <tbody>
-          {paginatedData.map((item) => (
-            <tr key={item.id}>
-              <td className="border px-2 py-1">{item.id}</td>
-              <td className="border px-2 py-1">{item.name}</td>
-              <td className="border px-2 py-1">{item.type}</td>
-              <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="text-blue-600 hover:underline"
-                >
-                  ویرایش
-                </button>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  حذف
-                </button>
-              </td>
-            </tr>
-          ))}
-          {paginatedData.length === 0 && (
+          {categories.length > 0 ? (
+            categories.map((item) => (
+              <tr key={item.id}>
+                <td className="border px-2 py-1">{item.id}</td>
+                <td className="border px-2 py-1">{item.name}</td>
+                <td className="border px-2 py-1">{item.type}</td>
+                <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
+                  <button
+                    onClick={() => {
+                      setForm({
+                        name: item.name,
+                        type:
+                          item.type === 'خدمت'
+                            ? 'SERVICE'
+                            : item.type === 'کالا'
+                              ? 'PRODUCT'
+                              : 'BOTH',
+                      });
+                      setEditingId(item.id);
+                    }}
+                    className="text-blue-600 hover:underline"
+                  >
+                    ویرایش
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    حذف
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
             <tr>
               <td colSpan={4} className="text-center text-gray-500 py-4">
                 نتیجه‌ای یافت نشد.
@@ -170,38 +256,24 @@ const ActivityCategory = () => {
         </tbody>
       </table>
 
-      {/* صفحه‌بندی */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-4 gap-2">
-          <button
-            className="px-3 py-1 border rounded hover:bg-gray-100"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            قبلی
-          </button>
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 border rounded ${
-                currentPage === i + 1
-                  ? 'bg-blue-500 text-white'
-                  : 'hover:bg-gray-100'
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            className="px-3 py-1 border rounded hover:bg-gray-100"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            بعدی
-          </button>
-        </div>
-      )}
+      {/* دکمه‌های صفحه‌بندی */}
+      <div className="flex justify-center mt-4 gap-2">
+        <button
+          className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+          onClick={() => prevUrl && setCurrentUrl(prevUrl)}
+          disabled={!prevUrl}
+        >
+          قبلی
+        </button>
+
+        <button
+          className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+          onClick={() => nextUrl && setCurrentUrl(nextUrl)}
+          disabled={!nextUrl}
+        >
+          بعدی
+        </button>
+      </div>
     </DashboardLayout>
   );
 };
