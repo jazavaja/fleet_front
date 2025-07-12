@@ -9,7 +9,12 @@ const Sidebar = () => {
 
   const navItems = [
     { label: 'داشبورد', path: '/dashboard' },
-    { label: 'ثبت ناوگان تجاری', path: '/dashboard/commercial-fleet' },
+    { label: 'ثبت ناوگان تجاری', path: '', children: [
+      { label: 'مدیریت نوع ناوگان', path: '/dashboard/nav-type' },
+      { label: 'مدیریت سایز ناوگان', path: '/dashboard/nav-size' },
+      { label: 'مدیریت برندهای ناوگان', path: '/dashboard/nav-brand' },
+      { label: ' تجاری مدیریت ناوگان', path: '/dashboard/nav-navy' },
+    ]},
     { label: 'ثبت منطقه فعالیت', path: '/dashboard/activity-area' },
     { label: 'ثبت انواع کاربری', path: '/dashboard/usage-types' },
     { label: 'بخش رسته فعالیت', path: '/dashboard/activity-categories' },
