@@ -31,7 +31,7 @@ const UserManagement = () => {
     lastName: '',
     phone: '',
     password: '',
-    group: '',
+    group: NaN,
   });
 
 
@@ -93,14 +93,10 @@ const UserManagement = () => {
         phone: form.phone,
         is_superuser: isSuperUser,
         is_staff: !isSuperUser,
-        groups: [form.group]
+        groups: form.group ? [form.group] : undefined, // فقط اگر form.group وجود داشته باشه، بفرست
+        password: !isEditing ? form.password : undefined,
       };
 
-      if (!isEditing) {
-        payload.password = form.password; // فقط وقتی ایجاد کاربر است
-      }
-
-      console.log("Result"+JSON.stringify(payload))
 
       const res = await fetch(url, {
         method,
@@ -113,7 +109,8 @@ const UserManagement = () => {
 
 
       if (!res.ok) {
-        console.error('خطا در ذخیره کاربر:');
+        const errorData = await res.json(); // خواندن بدنیه خطا
+        console.error('خطا در ذخیره کاربر:', errorData);
         return;
       }
 
@@ -125,7 +122,7 @@ const UserManagement = () => {
         lastName: '',
         phone: '',
         password: '',
-        group: groups.length > 0 ? groups[0].id : '',
+        group: groups.length > 0 ? groups[0].id : NaN,
       });
       setIsSuperUser(false);
     } catch (error) {
@@ -137,7 +134,7 @@ const UserManagement = () => {
     const selectedGroup = groups.find(g => g.name === user.group);
     setForm({
       ...user,
-      group: selectedGroup ? selectedGroup.id : '', // ✅ ID بجای name
+      group: selectedGroup ? selectedGroup.id : NaN, // ✅ ID بجای name
     });
     setIsEditing(true);
     // اگر نیاز بود بعداً isSuperUser رو هم برای ویرایش ست کنیم اینجا اضافه می‌کنیم
@@ -275,7 +272,7 @@ const UserManagement = () => {
                 lastName: '',
                 phone: '',
                 password: '',
-                group: groups.length > 0 ? groups[0].name : '',
+                group: groups.length > 0 ? groups[0].name : NaN,
               });
               setIsSuperUser(false);
             }}

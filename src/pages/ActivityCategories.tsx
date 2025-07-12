@@ -42,11 +42,7 @@ const ActivityCategory = () => {
           data.results.map((item: any) => ({
             id: item.id,
             name: item.name,
-            type: item.category_type === 'SERVICE'
-              ? 'خدمت'
-              : item.category_type === 'PRODUCT'
-                ? 'کالا'
-                : 'کالا و خدمت',
+            type: item.category_type
           }))
         );
         setNextUrl(data.next);
@@ -218,19 +214,17 @@ const ActivityCategory = () => {
               <tr key={item.id}>
                 <td className="border px-2 py-1">{item.id}</td>
                 <td className="border px-2 py-1">{item.name}</td>
-                <td className="border px-2 py-1">{item.type}</td>
+                <td className="border px-2 py-1">
+                  {item.type === 'SERVICE' ? 'خدمت' : item.type === 'PRODUCT' ? 'کالا' : 'کالا و خدمت'}
+                </td>
                 <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
                   <button
                     onClick={() => {
                       setForm({
                         name: item.name,
-                        type:
-                          item.type === 'خدمت'
-                            ? 'SERVICE'
-                            : item.type === 'کالا'
-                              ? 'PRODUCT'
-                              : 'BOTH',
+                        type: item.type ,
                       });
+                      console.log("TYPE"+item.type)
                       setEditingId(item.id);
                     }}
                     className="text-blue-600 hover:underline"
