@@ -93,7 +93,7 @@ const UserManagement = () => {
         phone: form.phone,
         is_superuser: isSuperUser,
         is_staff: !isSuperUser,
-        groups: form.group ? [form.group] : undefined, // فقط اگر form.group وجود داشته باشه، بفرست
+        groups: form.group ? [form.group] : undefined,
         password: !isEditing ? form.password : undefined,
       };
 
@@ -109,8 +109,7 @@ const UserManagement = () => {
 
 
       if (!res.ok) {
-        const errorData = await res.json(); // خواندن بدنیه خطا
-        console.error('خطا در ذخیره کاربر:', errorData);
+        console.error('خطا در ذخیره کاربر:');
         return;
       }
 
