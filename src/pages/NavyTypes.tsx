@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { API_BASE_URL,BASE_URL } from "../config";
+import { API_BASE_URL } from "../config";
 
 const API_URL = `${API_BASE_URL}/navytypes/`;
 const TOKEN = localStorage.getItem('access_token');
