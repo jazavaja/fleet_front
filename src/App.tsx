@@ -12,6 +12,10 @@ import UsersManagement from './pages/UsersManagement';
 import UsersGroups from './pages/UsersGroups';
 import GroupPermissions from './pages/GroupPermissions';
 import ReportExcel from './pages/Reports';
+import NavyType from './pages/NavyTypes';
+import NavySize from './pages/NavySize';
+import NavyBrand from './pages/NavyBrand';
+import NavyNav from './pages/NavyNav';
 
 // import Settings from './pages/Settings'; // یک صفحه مثال دیگر
 import Login from './pages/Login'; // صفحه ورود شما
@@ -47,6 +51,12 @@ function App() {
             <Route path="/dashboard/user-groups" element={<UsersGroups />} />
             <Route path="/dashboard/group-permissions" element={<GroupPermissions />} />
             <Route path="/dashboard/report-excel" element={<ReportExcel />} />
+            
+            <Route path="/dashboard/nav-type" element={<NavyType />} />
+            <Route path="/dashboard/nav-size" element={<NavySize />} />
+            <Route path="/dashboard/nav-brand" element={<NavyBrand />} />
+            <Route path="/dashboard/nav-navy" element={<NavyNav />} />
+            
             
           </Route>
 
