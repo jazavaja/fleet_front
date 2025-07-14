@@ -15,7 +15,7 @@ import ReportExcel from './pages/Reports';
 import NavyType from './pages/NavyTypes';
 import NavySize from './pages/NavySize';
 import NavyBrand from './pages/NavyBrand';
-import NavyNav from './pages/NavyNav';
+import NavyMain from './pages/NavyMain';
 
 // import Settings from './pages/Settings'; // یک صفحه مثال دیگر
 import Login from './pages/Login'; // صفحه ورود شما
@@ -55,7 +55,7 @@ function App() {
             <Route path="/dashboard/nav-type" element={<NavyType />} />
             <Route path="/dashboard/nav-size" element={<NavySize />} />
             <Route path="/dashboard/nav-brand" element={<NavyBrand />} />
-            <Route path="/dashboard/nav-navy" element={<NavyNav />} />
+            <Route path="/dashboard/nav-main" element={<NavyMain />} />
             
             
           </Route>

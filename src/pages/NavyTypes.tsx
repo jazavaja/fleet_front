@@ -3,7 +3,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { API_BASE_URL } from "../config";
 
 const API_URL = `${API_BASE_URL}/navytypes/`;
-const TOKEN = localStorage.getItem('access_token');
+
 
 interface NavyType {
   id: number;
@@ -12,6 +12,7 @@ interface NavyType {
 }
 
 const NavyTypeDashboard = () => {
+  const TOKEN = localStorage.getItem('access_token');
   const [types, setTypes] = useState<NavyType[]>([]);
   const [name, setName] = useState("");
   const [logo, setLogo] = useState<File | null>(null);

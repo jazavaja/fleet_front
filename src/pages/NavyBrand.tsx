@@ -4,7 +4,7 @@ import { API_BASE_URL } from "../config";
 
 const API_URL = `${API_BASE_URL}/navybrands/`;
 const NAVY_SIZES_URL = `${API_BASE_URL}/navysizes/`;
-const TOKEN = localStorage.getItem('access_token');
+
 
 interface NavySize {
   id: number;
@@ -21,6 +21,7 @@ interface NavyBrand {
 }
 
 const NavyBrandDashboard = () => {
+  const TOKEN = localStorage.getItem('access_token');
   const [brands, setBrands] = useState<NavyBrand[]>([]);
   const [sizes, setSizes] = useState<NavySize[]>([]);
   const [name, setName] = useState("");
