@@ -373,30 +373,7 @@ const NavyMainPage = () => {
         {message && <div className="mb-4 text-green-600">{message}</div>}
         {/* Compact Form */}
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded shadow mb-8 items-end">
-          <div>
-            <label className="block mb-1">نام</label>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleFormChange}
-              className="w-full border p-2 rounded"
-              required
-            />
-            {formErrors.name && <div className="text-red-600 text-sm">{formErrors.name}</div>}
-          </div>
-          <div>
-            <label className="block mb-1">تیپ</label>
-            <input
-              type="text"
-              name="tip"
-              value={form.tip}
-              onChange={handleFormChange}
-              className="w-full border p-2 rounded"
-              required
-            />
-            {formErrors.tip && <div className="text-red-600 text-sm">{formErrors.tip}</div>}
-          </div>
+          
           <div>
             <label className="block mb-1">نوع</label>
             <SearchableSelect
@@ -430,6 +407,31 @@ const NavyMainPage = () => {
             />
             {formErrors.brand && <div className="text-red-600 text-sm">{formErrors.brand}</div>}
           </div>
+          <div>
+            <label className="block mb-1">تیپ</label>
+            <input
+              type="text"
+              name="tip"
+              value={form.tip}
+              onChange={handleFormChange}
+              className="w-full border p-2 rounded"
+              required
+            />
+            {formErrors.tip && <div className="text-red-600 text-sm">{formErrors.tip}</div>}
+          </div>
+          <div>
+            <label className="block mb-1">نام</label>
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleFormChange}
+              className="w-full border p-2 rounded"
+              required
+            />
+            {formErrors.name && <div className="text-red-600 text-sm">{formErrors.name}</div>}
+          </div>
+          
           <div className="md:col-span-2 flex gap-2">
             <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
               {formMode === 'create' ? 'افزودن' : 'ویرایش'}
