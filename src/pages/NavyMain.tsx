@@ -262,7 +262,7 @@ const NavyMainPage = () => {
 
   // Fetch sizes when type changes
   useEffect(() => {
-    setForm((prev) => ({ ...prev, size: "", brand: "",mehvar: "" }));
+    setForm((prev) => ({ ...prev, size: "", brand: "", mehvar: "" }));
     setBrands([]);
     if (form.type) fetchSizesByType(form.type);
     else setSizes([]);
@@ -271,7 +271,7 @@ const NavyMainPage = () => {
   // Fetch brands and mehvars when size changes
   useEffect(() => {
     setForm((prev) => ({ ...prev, brand: "" }));
-    if (form.size){
+    if (form.size) {
       fetchBrandsBySize(form.size);
       fetchMehvarsBySize(form.size);
     }
@@ -299,7 +299,7 @@ const NavyMainPage = () => {
         }));
       }
     }
-  }, [form.type, form.size, form.brand, form.tip, formMode, nameManuallyChanged, types, sizes, brands,mehvars]);
+  }, [form.type, form.size, form.brand, form.tip, formMode, nameManuallyChanged, types, sizes, brands, mehvars]);
 
   // Handlers for form fields
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -361,7 +361,7 @@ const NavyMainPage = () => {
         return;
       }
       setMessage(formMode === 'edit' ? 'با موفقیت ویرایش شد' : 'با موفقیت افزوده شد');
-      setForm({ id: null, name: '', tip: '', type: '', size: '', brand: '',mehvar: '' });
+      setForm({ id: null, name: '', tip: '', type: '', size: '', brand: '', mehvar: '' });
       setFormMode('create');
       setSizes([]);
       setBrands([]);
@@ -531,13 +531,14 @@ const NavyMainPage = () => {
           </form>
           {/* Table header */}
           <div className="grid grid-cols-6 gap-2 font-bold border-b pb-2 mb-2">
-            <div>نام</div>
-            <div>تیپ</div>
-            <div>نوع</div>
-            <div>سایز</div>
-            <div>برند</div>
-            <div>عملیات</div>
+            <div className="flex items-center justify-center">نام</div>
+            <div className="flex items-center justify-center">تیپ</div>
+            <div className="flex items-center justify-center">نوع</div>
+            <div className="flex items-center justify-center">سایز</div>
+            <div className="flex items-center justify-center">برند</div>
+            <div className="flex items-center justify-center">عملیات</div>
           </div>
+
           {/* Table rows */}
           {loading ? (
             <div className="text-center py-4 col-span-6">در حال بارگذاری...</div>

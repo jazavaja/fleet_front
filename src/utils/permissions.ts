@@ -7,6 +7,11 @@ export const PERMISSIONS = {
       ADD_NAVYTYPE: "fleets.add_navytype",
       CHANGE_NAVYTYPE: "fleets.change_navytype",
       DELETE_NAVYTYPE: "fleets.delete_navytype",
+
+      VIEW_NAVMEHVAR: "fleets.view_navymehvar",
+      ADD_NAVMEHVAR: "fleets.add_navymehvar",
+      CHANGE_NAVMEHVAR: "fleets.change_navymehvar",
+      DELETE_NAVMEHVAR: "fleets.delete_navymehvar",
   
       VIEW_NAVYSIZE: "fleets.view_navysize",
       ADD_NAVYSIZE: "fleets.add_navysize",
@@ -121,3 +126,92 @@ export const hasPermission = (
     }
     return userPermissions.includes(required);
   };
+
+  // --- Grouped CRUD permission arrays ---
+  export const NAVYTYPE_CRUD = [
+    PERMISSIONS.FLEETS.VIEW_NAVYTYPE,
+    PERMISSIONS.FLEETS.ADD_NAVYTYPE,
+    PERMISSIONS.FLEETS.CHANGE_NAVYTYPE,
+    PERMISSIONS.FLEETS.DELETE_NAVYTYPE,
+  ];
+  export const NAVYSIZE_CRUD = [
+    PERMISSIONS.FLEETS.VIEW_NAVYSIZE,
+    PERMISSIONS.FLEETS.ADD_NAVYSIZE,
+    PERMISSIONS.FLEETS.CHANGE_NAVYSIZE,
+    PERMISSIONS.FLEETS.DELETE_NAVYSIZE,
+  ];
+  export const NAVYBRAND_CRUD = [
+    PERMISSIONS.FLEETS.VIEW_NAVYBRAND,
+    PERMISSIONS.FLEETS.ADD_NAVYBRAND,
+    PERMISSIONS.FLEETS.CHANGE_NAVYBRAND,
+    PERMISSIONS.FLEETS.DELETE_NAVYBRAND,
+  ];
+  export const NAVYMAIN_CRUD = [
+    PERMISSIONS.FLEETS.VIEW_NAVYMAIN,
+    PERMISSIONS.FLEETS.ADD_NAVYMAIN,
+    PERMISSIONS.FLEETS.CHANGE_NAVYMAIN,
+    PERMISSIONS.FLEETS.DELETE_NAVYMAIN,
+  ];
+
+  export const NAVYMEHVAR_CRUD = [
+    PERMISSIONS.FLEETS.VIEW_NAVMEHVAR,
+    PERMISSIONS.FLEETS.ADD_NAVMEHVAR,
+    PERMISSIONS.FLEETS.CHANGE_NAVMEHVAR,
+    PERMISSIONS.FLEETS.DELETE_NAVMEHVAR,
+  ];
+
+  export const ACTIVITYAREA_CRUD = [
+    PERMISSIONS.REGIONS.VIEW_ACTIVITYAREA,
+    PERMISSIONS.REGIONS.ADD_ACTIVITYAREA,
+    PERMISSIONS.REGIONS.CHANGE_ACTIVITYAREA,
+    PERMISSIONS.REGIONS.DELETE_ACTIVITYAREA,
+  ];
+
+  export const USAGETYPE_CRUD = [
+    PERMISSIONS.USAGES.VIEW_USAGETYPE,
+    PERMISSIONS.USAGES.ADD_USAGETYPE,
+    PERMISSIONS.USAGES.CHANGE_USAGETYPE,
+    PERMISSIONS.USAGES.DELETE_USAGETYPE,
+  ];
+
+  export const ACTIVITYCATEGORY_CRUD = [
+    PERMISSIONS.SECTORS.VIEW_ACTIVITYCATEGORY,
+    PERMISSIONS.SECTORS.ADD_ACTIVITYCATEGORY,
+    PERMISSIONS.SECTORS.CHANGE_ACTIVITYCATEGORY,
+    PERMISSIONS.SECTORS.DELETE_ACTIVITYCATEGORY,
+  ];
+
+  export const USER_CRUD = [
+    PERMISSIONS.ACCOUNTS.VIEW_USER,
+    PERMISSIONS.ACCOUNTS.ADD_USER,
+    PERMISSIONS.ACCOUNTS.CHANGE_USER,
+    PERMISSIONS.ACCOUNTS.DELETE_USER,
+  ];
+
+  // --- hasManageX functions ---
+  export const hasManageNavyType = (userPermissions: string[]) =>
+    NAVYTYPE_CRUD.every(perm => userPermissions.includes(perm));
+  export const hasManageNavySize = (userPermissions: string[]) =>
+    NAVYSIZE_CRUD.every(perm => userPermissions.includes(perm));
+  export const hasManageNavyBrand = (userPermissions: string[]) =>
+    NAVYBRAND_CRUD.every(perm => userPermissions.includes(perm));
+  export const hasManageNavyMain = (userPermissions: string[]) =>
+    NAVYMAIN_CRUD.every(perm => userPermissions.includes(perm));
+
+  export const hasManageNavyMehvar = (userPermissions: string[]) =>
+    NAVYMEHVAR_CRUD.every(perm => userPermissions.includes(perm));
+  
+  export const hasManageActivityArea = (userPermissions: string[]) =>
+    ACTIVITYAREA_CRUD.every(perm => userPermissions.includes(perm));
+
+  export const hasManageUsageTypes = (userPermissions: string[]) =>
+    USAGETYPE_CRUD.every(perm => userPermissions.includes(perm));
+
+  export const hasManageActivityCategories = (userPermissions: string[]) =>
+    ACTIVITYCATEGORY_CRUD.every(perm => userPermissions.includes(perm));
+
+  export const hasManageUserManagement = (userPermissions: string[]) =>
+    USER_CRUD.every(perm => userPermissions.includes(perm));
+  hasManageNavyType
+  
+  

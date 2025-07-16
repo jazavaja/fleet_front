@@ -224,7 +224,7 @@ const ActivityCategory = () => {
                         name: item.name,
                         type: item.type ,
                       });
-                      console.log("TYPE"+item.type)
+                      
                       setEditingId(item.id);
                     }}
                     className="text-blue-600 hover:underline"
