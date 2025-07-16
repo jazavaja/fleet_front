@@ -21,11 +21,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (!response.ok) {
+        console.log("No login")
         throw new Error('User not authenticated');
       }
 
       const data = await response.json();
-      setUser(data); // اطلاعات کاربر را ذخیره می‌کنیم
+      setUser(data);
+      localStorage.setItem('permissions', JSON.stringify(data.permissions));
+
+
+
     } catch (error) {
       console.error("User not authenticated", error);
       setUser(null); // کاربر وارد نشده است

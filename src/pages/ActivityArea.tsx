@@ -60,7 +60,6 @@ const Commercial_Fleet = () => {
       try {
         const res = await fetch(`${API_BASE_URL}/regions/areas/`);
         const data = await res.json();
-        console.log(data)
         setRegions(data);
         setLoading(false);
       } catch (err) {

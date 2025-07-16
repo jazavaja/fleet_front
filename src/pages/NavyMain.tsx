@@ -3,10 +3,11 @@ import DashboardLayout from "../layouts/DashboardLayout";
 
 import { BASE_URL } from "../config";
 // Placeholder API URLs (replace with your actual endpoints)
-const API_NAVYMAIN = "http://127.0.0.1:8000/api/navymain/";
-const API_NAVYTYPES = "http://127.0.0.1:8000/api/navytypes/";
-const API_NAVYSIZES_BY_TYPE = "http://127.0.0.1:8000/api/navysizes/by-type/";
-const API_NAVYBRANDS_BY_SIZE = "http://127.0.0.1:8000/api/navybrands/by-size/";
+const API_NAVYMAIN = `${BASE_URL}/api/navymain/`;
+const API_NAVYTYPES = `${BASE_URL}/api/navytypes/`;
+const API_NAVYSIZES_BY_TYPE = `${BASE_URL}/api/navysizes/by-type/`;
+const API_NAVYBRANDS_BY_SIZE = `${BASE_URL}/api/navybrands/by-size/`;
+const API_NAVYMEHVARS_BY_SIZE = `${BASE_URL}/api/navymehvars/by-size/`;
 
 // --- Interfaces ---
 interface NavyType {
@@ -28,6 +29,12 @@ interface NavyBrand {
   logo?: string;
   sizes?: NavySize[];
 }
+interface NavyMehvar {
+  id: number;
+  name: string;
+  logo?: string;
+  sizes?: NavySize[];
+}
 
 // NavyMain now uses nested objects for type, size, brand
 interface NavyMain {
@@ -37,6 +44,7 @@ interface NavyMain {
   type: NavyType | null;
   size: NavySize | null;
   brand: NavyBrand | null;
+  mehvar: NavyMehvar | null
 }
 
 // --- Custom Searchable Select ---
@@ -107,10 +115,15 @@ const NavyMainPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  // Search state
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+
   // Dropdown options
   const [types, setTypes] = useState<NavyType[]>([]);
   const [sizes, setSizes] = useState<NavySize[]>([]);
   const [brands, setBrands] = useState<NavyBrand[]>([]);
+  const [mehvars, setMehvars] = useState<NavyBrand[]>([]);
 
   // Form state
   const [form, setForm] = useState({
@@ -120,6 +133,7 @@ const NavyMainPage = () => {
     type: "",
     size: "",
     brand: "",
+    mehvar: ""
   });
   const [formMode, setFormMode] = useState<'create' | 'edit'>("create");
   const [formErrors, setFormErrors] = useState<any>({});
@@ -135,7 +149,8 @@ const NavyMainPage = () => {
   const fetchNavyMains = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_NAVYMAIN}?page=${currentPage}`, {
+      const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+      const response = await fetch(`${API_NAVYMAIN}?page=${currentPage}${searchParam}`, {
         headers: {
           'Authorization': `Bearer ${TOKEN}`,
           'Content-Type': 'application/json',
@@ -218,25 +233,52 @@ const NavyMainPage = () => {
     }
   };
 
-  // Fetch on mount and when currentPage changes
+  // Fetch brands by size
+  const fetchMehvarsBySize = async (sizeId: string | number) => {
+    if (!sizeId) {
+      setMehvars([]);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_NAVYMEHVARS_BY_SIZE}${sizeId}/`, {
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error("خطا در واکشی برندها");
+      const data = await response.json();
+      setMehvars(Array.isArray(data) ? data : data.results || []);
+    } catch (err) {
+      setMehvars([]);
+    }
+  };
+
+  // Fetch on mount and when currentPage or search changes
   useEffect(() => {
     fetchNavyMains();
     fetchNavyTypes();
-  }, [currentPage]);
+  }, [currentPage, search]);
 
   // Fetch sizes when type changes
   useEffect(() => {
-    setForm((prev) => ({ ...prev, size: "", brand: "" }));
+    setForm((prev) => ({ ...prev, size: "", brand: "",mehvar: "" }));
     setBrands([]);
     if (form.type) fetchSizesByType(form.type);
     else setSizes([]);
   }, [form.type]);
 
-  // Fetch brands when size changes
+  // Fetch brands and mehvars when size changes
   useEffect(() => {
     setForm((prev) => ({ ...prev, brand: "" }));
-    if (form.size) fetchBrandsBySize(form.size);
-    else setBrands([]);
+    if (form.size){
+      fetchBrandsBySize(form.size);
+      fetchMehvarsBySize(form.size);
+    }
+    else {
+      setBrands([]);
+      setMehvars([]);
+    }
   }, [form.size]);
 
   // Auto-fill name in create mode
@@ -249,14 +291,15 @@ const NavyMainPage = () => {
       const typeObj = types.find(t => String(t.id) === form.type);
       const sizeObj = sizes.find(s => String(s.id) === form.size);
       const brandObj = brands.find(b => String(b.id) === form.brand);
-      if (typeObj && sizeObj && brandObj) {
+      const mehvarObj = mehvars.find(b => String(b.id) === form.mehvar)
+      if (typeObj && sizeObj && brandObj && mehvarObj) {
         setForm(prev => ({
           ...prev,
           name: `${typeObj.name} - ${sizeObj.name} - ${brandObj.name} - ${form.tip}`
         }));
       }
     }
-  }, [form.type, form.size, form.brand, form.tip, formMode, nameManuallyChanged, types, sizes, brands]);
+  }, [form.type, form.size, form.brand, form.tip, formMode, nameManuallyChanged, types, sizes, brands,mehvars]);
 
   // Handlers for form fields
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -271,13 +314,14 @@ const NavyMainPage = () => {
     setFormErrors({});
     setMessage(null);
     // Simple validation
-    if (!form.name || !form.tip || !form.type || !form.size || !form.brand) {
+    if (!form.name || !form.tip || !form.type || !form.size || !form.brand || !form.mehvar) {
       setFormErrors({
         name: !form.name ? 'نام الزامی است' : undefined,
         tip: !form.tip ? 'تیپ الزامی است' : undefined,
         type: !form.type ? 'نوع الزامی است' : undefined,
         size: !form.size ? 'سایز الزامی است' : undefined,
         brand: !form.brand ? 'برند الزامی است' : undefined,
+        mehvar: !form.mehvar ? 'محور الزامی است' : undefined
       });
       return;
     }
@@ -288,6 +332,7 @@ const NavyMainPage = () => {
         type_id: form.type,
         size_id: form.size,
         brand_id: form.brand,
+        mehvar_id: form.mehvar,
       };
       let response;
       if (formMode === 'edit' && form.id) {
@@ -316,10 +361,11 @@ const NavyMainPage = () => {
         return;
       }
       setMessage(formMode === 'edit' ? 'با موفقیت ویرایش شد' : 'با موفقیت افزوده شد');
-      setForm({ id: null, name: '', tip: '', type: '', size: '', brand: '' });
+      setForm({ id: null, name: '', tip: '', type: '', size: '', brand: '',mehvar: '' });
       setFormMode('create');
       setSizes([]);
       setBrands([]);
+      setMehvars([]);
       fetchNavyMains();
       setNameManuallyChanged(false); // Reset after successful submission
     } catch (err) {
@@ -336,12 +382,16 @@ const NavyMainPage = () => {
       type: item.type ? String(item.type.id) : '',
       size: item.size ? String(item.size.id) : '',
       brand: item.brand ? String(item.brand.id) : '',
+      mehvar: item.mehvar ? String(item.mehvar.id) : '',
     });
     setFormMode('edit');
     setNameManuallyChanged(false);
     // Fetch dependent dropdowns for edit
     if (item.type) fetchSizesByType(item.type.id);
-    if (item.size) fetchBrandsBySize(item.size.id);
+    if (item.size) {
+      fetchBrandsBySize(item.size.id);
+      fetchMehvarsBySize(item.size.id);
+    }
   };
 
   // Delete logic
@@ -368,12 +418,12 @@ const NavyMainPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="rtl text-right max-w-3xl mx-auto p-4">
+      <div className="rtl text-right w-full p-4">
         <h1 className="text-2xl font-bold mb-4">مدیریت ناوگان اصلی</h1>
         {message && <div className="mb-4 text-green-600">{message}</div>}
         {/* Compact Form */}
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded shadow mb-8 items-end">
-          
+
           <div>
             <label className="block mb-1">نوع</label>
             <SearchableSelect
@@ -395,6 +445,17 @@ const NavyMainPage = () => {
               disabled={!form.type}
             />
             {formErrors.size && <div className="text-red-600 text-sm">{formErrors.size}</div>}
+          </div>
+          <div>
+            <label className="block mb-1">محور</label>
+            <SearchableSelect
+              options={mehvars.map(s => ({ value: String(s.id), label: s.name, logo: s.logo ? `${BASE_URL}${s.logo}` : undefined }))}
+              value={form.mehvar}
+              onChange={val => setForm(prev => ({ ...prev, mehvar: val }))}
+              placeholder="انتخاب محور"
+              disabled={!form.size}
+            />
+            {formErrors.mehvar && <div className="text-red-600 text-sm">{formErrors.mehvar}</div>}
           </div>
           <div>
             <label className="block mb-1">برند</label>
@@ -431,7 +492,7 @@ const NavyMainPage = () => {
             />
             {formErrors.name && <div className="text-red-600 text-sm">{formErrors.name}</div>}
           </div>
-          
+
           <div className="md:col-span-2 flex gap-2">
             <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
               {formMode === 'create' ? 'افزودن' : 'ویرایش'}
@@ -441,6 +502,33 @@ const NavyMainPage = () => {
         {/* List/Table */}
         <div className="bg-white rounded shadow p-4">
           <h2 className="text-xl font-semibold mb-4">لیست ناوگان</h2>
+          {/* Search Box */}
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              setCurrentPage(1);
+              setSearch(searchInput);
+            }}
+            className="mb-4 flex gap-2 items-center"
+          >
+            <input
+              type="text"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="جستجو در ناوگان..."
+              className="border p-2 rounded w-full md:w-64"
+            />
+            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">جستجو</button>
+            {search && (
+              <button
+                type="button"
+                className="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300"
+                onClick={() => { setSearch(""); setSearchInput(""); setCurrentPage(1); }}
+              >
+                پاک کردن
+              </button>
+            )}
+          </form>
           {/* Table header */}
           <div className="grid grid-cols-6 gap-2 font-bold border-b pb-2 mb-2">
             <div>نام</div>

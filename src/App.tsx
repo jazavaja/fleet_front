@@ -16,10 +16,10 @@ import NavyType from './pages/NavyTypes';
 import NavySize from './pages/NavySize';
 import NavyBrand from './pages/NavyBrand';
 import NavyMain from './pages/NavyMain';
+import NavyMehvar from './pages/NavyMehvar';
 
-// import Settings from './pages/Settings'; // یک صفحه مثال دیگر
-import Login from './pages/Login'; // صفحه ورود شما
-import PrivateRoute from './components/PrivateRoute'; // PrivateRoute را ایمپورت می‌کنیم
+import Login from './pages/Login'; 
+import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
@@ -52,6 +52,7 @@ function App() {
             <Route path="/dashboard/group-permissions" element={<GroupPermissions />} />
             <Route path="/dashboard/report-excel" element={<ReportExcel />} />
             
+            <Route path="/dashboard/nav-mehvar" element={<NavyMehvar />} />
             <Route path="/dashboard/nav-type" element={<NavyType />} />
             <Route path="/dashboard/nav-size" element={<NavySize />} />
             <Route path="/dashboard/nav-brand" element={<NavyBrand />} />
