@@ -2,6 +2,20 @@ import { useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import React from 'react';
 
+// Add a type for the data items
+interface ServiceProviderRequestItem {
+  id: number;
+  name: string;
+  family: string;
+  mobile: string;
+  nationalCode: string;
+  activityType: string;
+  responsibleImage: string;
+  stampImage: string;
+  activityArea: string;
+  status: string;
+}
+
 const ServiceProviderRequests = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -14,7 +28,7 @@ const ServiceProviderRequests = () => {
 
   const itemsPerPage = 5;
 
-  const [data, setData] = useState([
+  const [data, setData] = useState<ServiceProviderRequestItem[]>([
     {
       id: 1,
       name: 'علی',
@@ -126,7 +140,7 @@ const ServiceProviderRequests = () => {
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
-  );
+  ).map(item => ({ ...item, id: Number(item.id) }));
 
   const goToNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -222,7 +236,7 @@ const ServiceProviderRequests = () => {
             <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-4 text-gray-500">
+                  <td colSpan={5} className="text-center py-4 text-gray-500">
                     داده‌ای یافت نشد
                   </td>
                 </tr>
@@ -256,9 +270,9 @@ const ServiceProviderRequests = () => {
                       </td>
                     </tr>
 
-                    {expandedRow === item.id && (
+                    {expandedRow === Number(item.id) && (
                       <tr className="bg-gray-50">
-                        <td colSpan="5" className="p-4">
+                        <td colSpan={5} className="p-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <strong>کد ملی:</strong> {item.nationalCode}
