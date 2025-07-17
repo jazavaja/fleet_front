@@ -195,11 +195,16 @@ const Commercial_Fleet = () => {
 
   // حذف منطقه
   const handleDelete = async (id: number) => {
+    const token = localStorage.getItem('access_token');
     if (!window.confirm("آیا مطمئن هستید؟")) return;
 
     try {
       const res = await fetch(`${API_BASE_URL}/regions/areas/${id}/`, {
         method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (!res.ok) throw new Error("Failed to delete");

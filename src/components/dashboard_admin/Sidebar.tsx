@@ -19,7 +19,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }: { mobileOpen: boolean, setMobile
   const [openMenu, setOpenMenu] = React.useState<string | null>(null); // Which parent menu is open
   const permissions = localStorage.getItem('permissions')
   const userPermissions: string[] = permissions ? JSON.parse(permissions) : [];
-  console.log("UserPermission:::"+userPermissions)
+  
   const navItems = [
     { label: 'داشبورد', path: '/dashboard' },
     { label: 'ثبت ناوگان تجاری', path: '', children: [
