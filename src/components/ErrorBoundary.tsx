@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import Error500 from '../pages/Error500';
 
-class ErrorBoundary extends Component {
+class ErrorBoundary extends Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
   state = { hasError: false };
 
   static getDerivedStateFromError(error: any) {
@@ -12,9 +12,14 @@ class ErrorBoundary extends Component {
     console.error('React Error:', error, errorInfo);
   }
 
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
   render() {
     if (this.state.hasError) {
-      return <Error500 />;
+      return <h1>Something went wrong.</h1>;
     }
 
     return this.props.children;

@@ -15,7 +15,7 @@ function Login() {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     show();
     try {

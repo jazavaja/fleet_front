@@ -4,11 +4,6 @@ import { useGroups } from './hooks/useGroups';
 import { usePermissions } from './hooks/usePermissions';
 import { useGroupPermissions } from './hooks/useGroupPermissions';
 
-interface Group {
-  id: number;
-  name: string;
-}
-
 const PermissionsManagement = () => {
   const { groups, loading: groupsLoading } = useGroups();
   const { permissions: allPermissions, codeToIdMap, loading: permsLoading } = usePermissions();

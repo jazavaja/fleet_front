@@ -9,10 +9,7 @@ interface ActivityCategory {
 
 const ActivityCategory = () => {
   const [categories, setCategories] = useState<ActivityCategory[]>([]);
-  const [form, setForm] = useState<Omit<ActivityCategory, 'id'>>({
-    name: '',
-    type: 'خدمت',
-  });
+  const [form, setForm] = useState<{ name: string; type: 'SERVICE' | 'PRODUCT' | 'BOTH' }>({ name: '', type: 'SERVICE' });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [nextUrl, setNextUrl] = useState<string | null>(null);
@@ -22,6 +19,21 @@ const ActivityCategory = () => {
   const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
   const BASE_LIST_URL = `${API_BASE_URL}/activity-category/`;
   const AUTH_TOKEN = localStorage.getItem('access_token') || '';
+
+  // Persian label map
+  const typeLabelMap: Record<'SERVICE' | 'PRODUCT' | 'BOTH', string> = {
+    SERVICE: 'خدمت',
+    PRODUCT: 'کالا',
+    BOTH: 'کالا و خدمت',
+  };
+
+  // Add a function to map Persian to English type if needed
+  const toEnglishType = (type: string): 'SERVICE' | 'PRODUCT' | 'BOTH' => {
+    if (type === 'خدمت') return 'SERVICE';
+    if (type === 'کالا') return 'PRODUCT';
+    if (type === 'کالا و خدمت') return 'BOTH';
+    return type as 'SERVICE' | 'PRODUCT' | 'BOTH';
+  };
 
   // فراخوانی داده‌ها از URL مشخص
   const fetchCategories = async (url: string) => {
@@ -108,7 +120,7 @@ const ActivityCategory = () => {
 
       if (!res.ok) throw new Error(editingId ? 'خطا در ویرایش' : 'خطا در افزودن');
 
-      setForm({ name: '', type: 'خدمت' });
+      setForm({ name: '', type: 'SERVICE' });
       setEditingId(null);
 
       // دوباره بارگذاری لیست
@@ -156,9 +168,7 @@ const ActivityCategory = () => {
 
         <select
           value={form.type}
-          onChange={(e) =>
-            setForm({ ...form, type: e.target.value as 'خدمت' | 'کالا' | 'کالا و خدمت' })
-          }
+          onChange={e => setForm({ ...form, type: e.target.value as 'SERVICE' | 'PRODUCT' | 'BOTH' })}
           className="border rounded px-3 py-1"
         >
           <option value="SERVICE">خدمت</option>
@@ -178,7 +188,7 @@ const ActivityCategory = () => {
             type="button"
             onClick={() => {
               setEditingId(null);
-              setForm({ name: '', type: 'خدمت' });
+              setForm({ name: '', type: 'SERVICE' });
             }}
             className="text-red-500"
           >
@@ -215,14 +225,14 @@ const ActivityCategory = () => {
                 <td className="border px-2 py-1">{item.id}</td>
                 <td className="border px-2 py-1">{item.name}</td>
                 <td className="border px-2 py-1">
-                  {item.type === 'SERVICE' ? 'خدمت' : item.type === 'PRODUCT' ? 'کالا' : 'کالا و خدمت'}
+                  {typeLabelMap[toEnglishType(item.type)]}
                 </td>
                 <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
                   <button
                     onClick={() => {
                       setForm({
                         name: item.name,
-                        type: item.type ,
+                        type: item.type as 'SERVICE' | 'PRODUCT' | 'BOTH',
                       });
                       
                       setEditingId(item.id);

@@ -3,21 +3,26 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import Select from "react-select";
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
 
+// Define types
+interface Province { id: number; name: string; }
+interface City { id: number; name: string; province: Province; }
+interface Area { id: number; city: City; area: string; }
+
 const Commercial_Fleet = () => {
 
   // States
-  const [regions, setRegions] = useState([]);
-  const [formData, setFormData] = useState({
+  const [regions, setRegions] = useState<Area[]>([]);
+  const [formData, setFormData] = useState<{ id: number | null; province_id: string | number; city_id: string | number; area: string; }>({
     id: null,
     province_id: "",
     city_id: "",
     area: "",
   });
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedProvinceOption, setSelectedProvinceOption] = useState(null);
-  const [selectedCityOption, setSelectedCityOption] = useState(null);
-  const [filteredCities, setFilteredCities] = useState([]);
-  const [provinces, setProvinces] = useState([]);
+  const [selectedProvinceOption, setSelectedProvinceOption] = useState<{ value: number; label: string } | null>(null);
+  const [selectedCityOption, setSelectedCityOption] = useState<{ value: number; label: string } | null>(null);
+  const [filteredCities, setFilteredCities] = useState<City[]>([]);
+  const [provinces, setProvinces] = useState<Province[]>([]);
   const [loading, setLoading] = useState(true);
 
   // ۱. دریافت لیست استان‌ها
@@ -82,7 +87,7 @@ const Commercial_Fleet = () => {
   }));
 
   // انتخاب استان
-  const handleProvinceSelect = (selectedOption) => {
+  const handleProvinceSelect = (selectedOption: { value: number; label: string } | null) => {
     setSelectedProvinceOption(selectedOption);
     setFormData((prev) => ({
       ...prev,
@@ -93,7 +98,7 @@ const Commercial_Fleet = () => {
   };
 
   // انتخاب شهر
-  const handleCitySelect = (selectedOption) => {
+  const handleCitySelect = (selectedOption: { value: number; label: string } | null) => {
     setSelectedCityOption(selectedOption);
     setFormData((prev) => ({
       ...prev,
@@ -102,7 +107,7 @@ const Commercial_Fleet = () => {
   };
 
   // تغییر منطقه
-  const handleAreaChange = (e) => {
+  const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
       ...prev,
       area: e.target.value,
@@ -110,7 +115,7 @@ const Commercial_Fleet = () => {
   };
 
   // ثبت منطقه
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!formData.province_id || !formData.city_id || !formData.area) {
@@ -165,12 +170,12 @@ const Commercial_Fleet = () => {
   };
 
   // ویرایش منطقه
-  const handleEdit = (region) => {
+  const handleEdit = (region: Area) => {
     console.log(region)
     const provinceOption = provinceOptions.find(
       (p) => p.value === region.city.province.id
-    );
-    const cityOption = cityOptions.find((c) => c.value === region.city.id);
+    ) || null;
+    const cityOption = cityOptions.find((c) => c.value === region.city.id) || null;
 
     setSelectedProvinceOption(provinceOption);
     setSelectedCityOption(cityOption);
@@ -186,7 +191,7 @@ const Commercial_Fleet = () => {
   };
 
   // حذف منطقه
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!window.confirm("آیا مطمئن هستید؟")) return;
 
     try {

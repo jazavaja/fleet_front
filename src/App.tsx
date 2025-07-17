@@ -1,7 +1,5 @@
 // src/App.tsx
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import DashboardLayout from './layouts/DashboardLayout'; // لایه داشبورد شما
 import Dashboard from './pages/Dashboard';
 import Commericial_Fleet from './pages/Commercial_Fleet';
 import ActivityArea from './pages/ActivityArea';

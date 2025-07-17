@@ -1,8 +1,25 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// یک Context برای مدیریت وضعیت احراز هویت ایجاد می‌کنیم
-const AuthContext = createContext(null);
+// Define AuthContextType
+export interface AuthContextType {
+  user: any;
+  isAuthenticated: boolean;
+  login: (phone: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  loading: boolean;
+}
+
+// Provide a default value for AuthContext
+const defaultAuthContext: AuthContextType = {
+  user: null,
+  isAuthenticated: false,
+  login: async () => false,
+  logout: () => {},
+  loading: false,
+};
+
+const AuthContext = createContext<AuthContextType>(defaultAuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState(null); // اطلاعات کاربر وارد شده

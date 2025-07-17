@@ -1,14 +1,22 @@
 // src/components/PrivateRoute.tsx
-import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const PrivateRoute = () => {
-  const { isAuthenticated, loading } = useAuth(); // از هوک سفارشی استفاده می‌کنیم
+// Type for AuthContext value
+interface AuthContextType {
+  user: any;
+  isAuthenticated: boolean;
+  login: (phone: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  loading: boolean;
+}
 
-  // اگر هنوز در حال بارگذاری هستیم، چیزی نمایش نمی‌دهیم یا یک لودر نشان می‌دهیم
+const PrivateRoute = () => {
+  const { isAuthenticated, loading } = useAuth() as AuthContextType;
+
+  // if (loading) {
   if (loading) {
-    return <div>Loading authentication...</div>; // می‌توانید یک spinner یا loading component قرار دهید
+    return <div>Loading authentication...</div>;
   }
 
   // اگر کاربر احراز هویت شده باشد، به مسیر مورد نظر اجازه دسترسی می‌دهد

@@ -9,7 +9,7 @@ interface Group {
 const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
 const GroupManagement = () => {
 
-    const { groups, loading, removeCacheGroups, refetch } = useGroups();
+    const { groups, removeCacheGroups, refetch } = useGroups();
 
     const [form, setForm] = useState<Group>({ id: 0, name: '' });
     const [isEditing, setIsEditing] = useState(false);
