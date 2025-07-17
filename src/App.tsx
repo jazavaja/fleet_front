@@ -15,7 +15,7 @@ import NavySize from './pages/NavySize';
 import NavyBrand from './pages/NavyBrand';
 import NavyMain from './pages/NavyMain';
 import NavyMehvar from './pages/NavyMehvar';
-
+import MainProject from './pages/MainProject';
 import Login from './pages/Login'; 
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './context/AuthContext';
@@ -35,6 +35,7 @@ function App() {
         <Routes>
           {/* مسیر ورود بدون نیاز به احراز هویت */}
           <Route path="/login" element={<Login />} />
+          <Route path="/" element={<MainProject />} />
 
           {/* گروه مسیرهایی که نیاز به احراز هویت دارند */}
           <Route element={<PrivateRoute />}>
