@@ -116,6 +116,7 @@ const Commercial_Fleet = () => {
 
   // ثبت منطقه
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const token = localStorage.getItem('access_token');
     e.preventDefault();
 
     if (!formData.province_id || !formData.city_id || !formData.area) {
@@ -133,6 +134,7 @@ const Commercial_Fleet = () => {
         const res = await fetch(`${API_BASE_URL}/regions/areas/${formData.id}/`, {
           method: "PUT",
           headers: {
+            'Authorization': `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
@@ -151,6 +153,7 @@ const Commercial_Fleet = () => {
         const res = await fetch(`${API_BASE_URL}/regions/areas/`, {
           method: "POST",
           headers: {
+            'Authorization': `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
