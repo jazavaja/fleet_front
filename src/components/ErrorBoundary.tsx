@@ -1,10 +1,9 @@
 import { Component } from 'react';
-import Error500 from '../pages/Error500';
 
 class ErrorBoundary extends Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
   state = { hasError: false };
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 

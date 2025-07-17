@@ -7,7 +7,7 @@ interface User {
   lastName: string;
   phone: string;
   password: string;
-  group: string;
+  group: number;
 }
 
 const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
@@ -130,11 +130,7 @@ const UserManagement = () => {
   };
 
   const handleEdit = (user: User) => {
-    const selectedGroup = groups.find(g => g.name === user.group);
-    setForm({
-      ...user,
-      group: selectedGroup ? selectedGroup.id : NaN, // ✅ ID بجای name
-    });
+    setForm(user);
     setIsEditing(true);
     // اگر نیاز بود بعداً isSuperUser رو هم برای ویرایش ست کنیم اینجا اضافه می‌کنیم
   };
@@ -223,7 +219,7 @@ const UserManagement = () => {
 
         <select
           value={form.group}
-          onChange={(e) => setForm({ ...form, group: e.target.value })}
+          onChange={(e) => setForm({ ...form, group: Number(e.target.value) })}
           className="border px-3 py-2 rounded w-[180px]"
           disabled={groupsLoading || groups.length === 0 || isSuperUser}
         >
@@ -271,7 +267,7 @@ const UserManagement = () => {
                 lastName: '',
                 phone: '',
                 password: '',
-                group: groups.length > 0 ? groups[0].name : NaN,
+                group: groups.length > 0 ? groups[0].id : NaN,
               });
               setIsSuperUser(false);
             }}
@@ -314,7 +310,7 @@ const UserManagement = () => {
                   <td className="border px-2 py-1">{user.firstName}</td>
                   <td className="border px-2 py-1">{user.lastName}</td>
                   <td className="border px-2 py-1">{user.phone}</td>
-                  <td className="border px-2 py-1">{user.group}</td>
+                  <td className="border px-2 py-1">{groups.find(g => g.id === user.group)?.name || ''}</td>
                   <td className="border px-2 py-1 space-x-2 rtl:space-x-reverse">
                     <button
                       onClick={()=> handleEdit(user)}

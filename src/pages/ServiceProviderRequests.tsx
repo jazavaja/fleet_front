@@ -5,9 +5,9 @@ import React from 'react';
 const ServiceProviderRequests = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [expandedRow, setExpandedRow] = useState(null);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loadedImages, setLoadedImages] = useState({});
+  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImage, setModalImage] = useState('');
   const [modalAlt, setModalAlt] = useState('');
@@ -140,7 +140,7 @@ const ServiceProviderRequests = () => {
     setCurrentPage(pageNumber);
   };
 
-  const handleExpand = (id: number | React.SetStateAction<null>) => {
+  const handleExpand = (id: number) => {
     if (!expandedRow || expandedRow !== id) {
       setLoadedImages((prev) => ({ ...prev, [id]: true }));
     }
@@ -199,7 +199,7 @@ const ServiceProviderRequests = () => {
                   alt={modalAlt}
                   className="w-full h-auto max-h-[70vh] object-contain mx-auto"
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/500x300?text=تصویر+یافت+نشد';
+                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/500x300?text=تصویر+یافت+نشد';
                   }}
                 />
               </div>
@@ -278,7 +278,7 @@ const ServiceProviderRequests = () => {
                                     handleImageClick(item.responsibleImage.trim(), `تصویر مسئول - ${item.name} ${item.family}`);
                                   }}
                                   onError={(e) => {
-                                    e.target.src = 'https://via.placeholder.com/50';
+                                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/50';
                                   }}
                                 />
                               ) : (
@@ -297,7 +297,7 @@ const ServiceProviderRequests = () => {
                                     handleImageClick(item.stampImage.trim(), `مهر تصویر - ${item.name} ${item.family}`);
                                   }}
                                   onError={(e) => {
-                                    e.target.src = 'https://via.placeholder.com/50';
+                                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/50';
                                   }}
                                 />
                               ) : (
