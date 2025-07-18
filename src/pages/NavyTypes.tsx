@@ -48,7 +48,7 @@ const NavyTypeDashboard = () => {
     if (logo) formData.append("logo", logo);
   
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/navytypes/", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${TOKEN}`, // فقط اینو بفرست
