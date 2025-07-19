@@ -142,8 +142,8 @@ const UserManagement = () => {
       const payloadChangePassword = {
         new_password: newPassword,
       };
-      const res = await fetch(`${BASE_URL}/users/change-password-super/${selectedUserIdForPassword}/`, {
-        method: 'POST',
+      const res = await fetch(`${BASE_URL}/change-password-super/${selectedUserIdForPassword}/`, {
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -360,7 +360,7 @@ const UserManagement = () => {
             <h3 className="text-lg font-bold mb-4">ویرایش پسورد</h3>
             <input
               type="password"
-              placeholder="پسورد جدید"
+              placeholder="پسورد جدید (شامل حروف و عدد) "
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="border px-3 py-2 rounded w-full mb-4"
