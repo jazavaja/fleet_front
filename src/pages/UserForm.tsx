@@ -139,13 +139,16 @@ const UserManagement = () => {
     if (!selectedUserIdForPassword || !newPassword.trim()) return;
 
     try {
-      const res = await fetch(`${BASE_URL}/users/${selectedUserIdForPassword}/change-password/`, {
+      const payloadChangePassword = {
+        new_password: newPassword,
+      };
+      const res = await fetch(`${BASE_URL}/users/change-password-super/${selectedUserIdForPassword}/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password: newPassword }),
+        body: JSON.stringify(payloadChangePassword),
       });
 
       if (!res.ok) throw new Error('خطا در تغییر پسورد');
